@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Controle de Compras e Fretes</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;font-family:Inter,Arial,sans-serif;background:#f5f6f8;color:#1f2937}
+.container{max-width:1180px;margin:auto;padding:24px 16px 45px}
+h1{margin:0 0 5px;font-size:28px}.subtitle{color:#6b7280;margin-bottom:22px}
+.grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:18px}
+.card,.section{background:#fff;border:1px solid #e5e7eb;border-radius:14px;box-shadow:0 2px 8px rgba(0,0,0,.04)}
+.card{padding:16px}.label{font-size:13px;color:#6b7280}.value{font-size:21px;font-weight:700;margin-top:5px}
+.section{margin-bottom:16px;overflow:hidden}.section-header{padding:16px 18px;border-bottom:1px solid #e5e7eb;font-weight:700}
+.form{padding:16px;display:grid;grid-template-columns:2fr 1fr 1fr 1fr auto;gap:10px}
+.form.small{grid-template-columns:1.7fr 1fr 1.2fr auto}
+input,select,button{width:100%;min-height:42px;border-radius:9px;border:1px solid #d1d5db;padding:9px 11px;font-size:14px;background:#fff}
+button{cursor:pointer;font-weight:700;border:0}.btn-primary{background:#111827;color:#fff}.btn-secondary{background:#eef0f3;color:#374151}
+.btn-danger{background:#fee2e2;color:#991b1b;width:auto;padding:0 10px;min-height:36px}
+.helper{padding:0 16px 14px;color:#6b7280;font-size:13px}
+.table-wrap{overflow-x:auto}table{width:100%;border-collapse:collapse;min-width:980px}
+th,td{padding:11px 10px;border-bottom:1px solid #eef0f2;text-align:left;font-size:14px;vertical-align:middle}
+th{background:#f8fafc;font-size:13px;color:#4b5563}
+td input,td select{min-height:36px;padding:6px 8px}
+.empty{padding:26px 16px;text-align:center;color:#6b7280}
+.actions{display:flex;gap:6px}.pill{display:inline-block;padding:5px 8px;border-radius:999px;background:#eef2ff;font-size:12px}
+.remessa-list{padding:12px 16px 16px;display:grid;gap:10px}
+.remessa{border:1px solid #e5e7eb;border-radius:12px;padding:13px}
+.remessa-top{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:9px}
+.remessa-name{font-weight:700}.muted{color:#6b7280;font-size:13px}
+.remessa-meta{display:flex;flex-wrap:wrap;gap:7px;font-size:13px;margin-bottom:10px}
+.remessa-items{font-size:13px;color:#4b5563;margin-bottom:10px}
+.note{padding:12px 16px 16px;color:#6b7280;font-size:13px}
+.kpi{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;padding:14px 16px}
+.kpi div{background:#f8fafc;border-radius:10px;padding:11px}
+.kpi strong{display:block;font-size:16px;margin-top:3px}
+@media(max-width:1000px){.grid{grid-template-columns:repeat(3,1fr)}}
+@media(max-width:850px){.grid{grid-template-columns:repeat(2,1fr)}.form,.form.small{grid-template-columns:1fr 1fr}.form button,.form.small button{grid-column:1/-1}}
+@media(max-width:500px){.grid{grid-template-columns:1fr}.form,.form.small{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+
+<div id="loginOverlay" style="position:fixed;inset:0;background:rgba(245,246,248,.97);z-index:9999;display:flex;align-items:center;justify-content:center;padding:20px">
+  <div class="card" style="width:min(380px,100%);padding:24px">
+    <h2 style="margin:0 0 7px;font-size:22px">Controle de Compras</h2>
+    <div class="subtitle" style="margin-bottom:16px">Digite a senha de acesso.</div>
+    <input id="appPassword" type="password" placeholder="Senha" onkeydown="if(event.key==='Enter') entrar()" style="margin-bottom:10px">
+    <button class="btn-primary" onclick="entrar()">Entrar</button>
+    <div id="loginError" style="display:none;color:#991b1b;font-size:13px;margin-top:10px">Senha incorreta ou servidor indisponível.</div>
+  </div>
+</div>
+<div style="position:fixed;right:14px;bottom:14px;z-index:20"><span id="cloudStatus" class="pill" style="background:#eef2ff">☁ Salvando na nuvem</span></div>
+
+<div class="container">
+  <h1>Controle de Compras e Fretes</h1>
+  <div class="subtitle">Cadastre os produtos em BRL, coloque o peso quando chegarem e organize vários fretes consolidados.</div>
+
+  <div class="grid">
+    <div class="card"><div class="label">Total dos itens</div><div class="value" id="totalItens">R$ 0,00</div></div>
+    <div class="card"><div class="label">Total dos fretes</div><div class="value" id="totalFretes">R$ 0,00</div></div>
+    <div class="card"><div class="label">Impostos no Brasil</div><div class="value" id="totalImpostos">R$ 0,00</div></div>
+    <div class="card"><div class="label">Já pago</div><div class="value" id="jaPago">R$ 0,00</div></div>
+    <div class="card"><div class="label">Custo final</div><div class="value" id="custoFinal">R$ 0,00</div></div>
+  </div>
+
+  <div class="section">
+    <div class="section-header">1. Produtos</div>
+    <div class="form">
+      <input id="item" placeholder="Ex.: Controle PS3">
+      <input id="preco" type="number" min="0" step="0.01" placeholder="Preço pago (R$)">
+      <input id="peso" type="number" min="0" step="1" placeholder="Peso (g)">
+      <select id="status">
+        <option>Comprado</option><option>Na suíte</option><option>Consolidado</option><option>Recebido BR</option>
+      </select>
+      <button class="btn-primary" onclick="adicionarItem()">Adicionar</button>
+    </div>
+    <div class="helper">O peso pode ficar em branco e ser preenchido depois. Digite o peso em gramas (ex.: 2000 = 2,00 kg). Cada produto pode ser vinculado a uma remessa na tabela.</div>
+    <div id="pesoAlert"></div>
+    <div class="filter-row">
+      <span class="filter-label">Mostrar:</span>
+      <select id="filtroRemessa" onchange="renderItens()">
+        <option value="todos">Todos</option>
+        <option value="sem">Sem remessa</option>
+      </select>
+    </div>
+    <div id="itensContainer"></div>
+  </div>
+
+  <div class="section">
+    <div class="section-header">2. Fretes consolidados</div>
+    <div class="form small">
+      <input id="freteNome" placeholder="Ex.: Frete 1 — primeira consolidação">
+      <input id="freteValor" type="number" min="0" step="0.01" placeholder="Valor do frete (R$)">
+      <select id="freteRateio">
+        <option value="peso">Ratear por peso</option>
+        <option value="igual">Dividir igualmente</option>
+        <option value="valor">Ratear pelo valor dos itens</option>
+      </select>
+      <button class="btn-primary" onclick="adicionarFrete()">Salvar frete</button>
+    </div>
+    <div class="helper">
+      Salve o Frete 1 agora e depois crie o Frete 2, Frete 3 etc. Cada frete fica guardado separadamente e pode usar um rateio diferente.
+    </div>
+    <div id="fretesContainer"></div>
+  </div>
+
+  <div class="section">
+    <div class="section-header">3. Impostos no Brasil</div>
+    <div class="form small">
+      <select id="impostoFrete"></select>
+      <input id="impostoValor" type="number" min="0" step="0.01" placeholder="Imposto desta remessa (R$)">
+      <select id="impostoRateio">
+        <option value="peso">Ratear por peso</option>
+        <option value="igual">Dividir igualmente</option>
+        <option value="valor">Ratear pelo valor dos itens</option>
+      </select>
+      <button class="btn-secondary" onclick="salvarImposto()">Adicionar imposto</button>
+    </div>
+    <div class="helper">Escolha a qual frete/remessa o imposto pertence. O valor será rateado somente entre os itens daquela remessa.</div>
+    <div id="impostosContainer"></div>
+  </div>
+
+  <div class="section">
+    <div class="section-header">4. Custo por item</div>
+    <div id="custoContainer"></div>
+    <div class="note">Custo final do item = preço pago + parte dos fretes da(s) remessa(s) + parte dos impostos.</div>
+  </div>
+
+  <div class="section">
+    <div class="section-header">5. Backup</div>
+    <div class="form small">
+      <button class="btn-secondary" onclick="exportarBackup()">Exportar backup</button>
+      <label style="display:flex;align-items:center;min-height:42px;border:1px solid #d1d5db;border-radius:9px;padding:0 11px;font-size:14px;cursor:pointer;">
+        Importar backup
+        <input id="importFile" type="file" accept=".json,application/json" onchange="importarBackup(event)" style="display:none">
+      </label>
+      <div class="helper" style="padding:12px 0 0;margin:0;">Salve uma cópia dos seus dados antes de trocar de computador ou navegador.</div>
+    </div>
+  </div>
+</div>
+
+
+
+<script src="/app.js"></script>
+</body>
+</html>
