@@ -1,6 +1,6 @@
 const moeda=new Intl.NumberFormat("pt-BR",{style:"currency",currency:"BRL"});
 const API="/api";
-let appKey=sessionStorage.getItem("controle_app_key")||"";
+let appKey=localStorage.getItem("controle_app_key")||"";
 let dados={itens:[],fretes:[],impostos:[]};
 const timers=new Map();
 function num(v){const n=parseFloat(v);return isNaN(n)?0:n}
@@ -9,7 +9,7 @@ function setStatus(t,ok=true){const e=document.getElementById("cloudStatus");if(
 async function apiFetch(path,options={}){const h=Object.assign({"Content-Type":"application/json","X-App-Key":appKey},options.headers||{});const r=await fetch(API+path,{...options,headers:h});if(r.status===401)throw Error("AUTH");if(!r.ok)throw Error(await r.text()||"Erro");return r.status===204?null:r.json()}
 function oldLocal(){try{const x=localStorage.getItem("controle_compras_fretes_v2");return x?JSON.parse(x):null}catch{return null}}
 function normalizeLocal(x){if(!x)return null;return{itens:(x.itens||[]).map(i=>({id:String(i.id||crypto.randomUUID()),item:i.item||"",preco:num(i.preco),peso:num(i.peso),status:i.status||"Comprado",freteId:i.freteId?String(i.freteId):""})),fretes:(x.fretes||[]).map(f=>({id:String(f.id||crypto.randomUUID()),nome:f.nome||"Frete",valor:num(f.valor),rateio:f.rateio||"peso"})),impostos:Array.isArray(x.impostos)?x.impostos.map(i=>({id:String(i.id||crypto.randomUUID()),freteId:String(i.freteId||""),valor:num(i.valor),rateio:i.rateio||"peso"})):[]}}
-async function entrar(){const pw=document.getElementById("appPassword").value;if(!pw)return;appKey=pw;try{const data=await apiFetch("/data");sessionStorage.setItem("controle_app_key",appKey);document.getElementById("loginOverlay").style.display="none";dados=data;const old=oldLocal();if(!data.itens.length&&!data.fretes.length&&!data.impostos.length&&old){const x=normalizeLocal(old);await apiFetch("/import",{method:"POST",body:JSON.stringify(x)});dados=x;setStatus("Dados importados",true)}else setStatus("Salvando na nuvem",true);render()}catch{appKey="";sessionStorage.removeItem("controle_app_key");document.getElementById("loginError").style.display="block";setStatus("Sem conexão",false)}}
+async function entrar(){const pw=document.getElementById("appPassword").value||appKey;if(!pw)return;appKey=pw;try{const data=await apiFetch("/data");localStorage.setItem("controle_app_key",appKey);document.getElementById("loginOverlay").style.display="none";dados=data;const old=oldLocal();if(!data.itens.length&&!data.fretes.length&&!data.impostos.length&&old){const x=normalizeLocal(old);await apiFetch("/import",{method:"POST",body:JSON.stringify(x)});dados=x;setStatus("Dados importados",true)}else setStatus("Salvando na nuvem",true);render()}catch{appKey="";localStorage.removeItem("controle_app_key");document.getElementById("loginError").style.display="block";setStatus("Sem conexão",false)}}
 function schedule(k,fn,ms=600){clearTimeout(timers.get(k));timers.set(k,setTimeout(async()=>{timers.delete(k);try{await fn();setStatus("Salvo",true)}catch{setStatus("Erro ao salvar",false)}},ms))}
 function pesoTotal(a){return a.reduce((s,x)=>s+num(x.peso),0)}
 function valorTotal(a){return a.reduce((s,x)=>s+num(x.preco),0)}
