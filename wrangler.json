@@ -1,16 +1,21 @@
+
 {
-	"compatibility_date": "2025-10-08",
-	"main": "src/index.ts",
-	"name": "calculad",
-	"upload_source_maps": true,
-	"d1_databases": [
-		{
-			"binding": "DB",
-			"database_id": "6b6a5956-385e-4754-be23-7465a3dbd8dc",
-			"database_name": "d1-template-database"
-		}
-	],
-	"observability": {
-		"enabled": true
-	}
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "calculad",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-10-08",
+  "workers_dev": true,
+  "preview_urls": true,
+  "assets": {
+    "directory": "./public",
+    "binding": "ASSETS"
+  },
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "d1-template-database",
+      "database_id": "6b6a5956-385e-4754-be23-7465a3dbd8dc",
+      "migrations_dir": "migrations"
+    }
+  ]
 }
