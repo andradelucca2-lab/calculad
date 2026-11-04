@@ -42,6 +42,16 @@ input:focus,select:focus{outline:2px solid #b2ddff;border-color:#84caff}
 #cloudStatus{display:inline-flex;align-items:center;border-radius:999px;padding:7px 11px;background:#eef2ff;color:#3730a3;border:1px solid #c7d2fe;font-size:11px;font-weight:800;box-shadow:0 4px 14px #0001}
 .login{position:fixed;inset:0;background:rgba(244,246,248,.98);z-index:9999;display:flex;align-items:center;justify-content:center;padding:20px}.login-card{width:min(390px,100%);padding:24px;background:#fff;border:1px solid var(--line);border-radius:16px;box-shadow:0 20px 60px #1018281a}.login-card h2{margin:0 0 6px}.login-card input{margin:12px 0 9px}.login-card button{width:100%}
 .toolbar{display:flex;gap:8px;flex-wrap:wrap}
+#itensContainer table{min-width:900px}
+#itensContainer .product-name{min-width:230px;font-weight:800}
+.calc-layout{display:grid;grid-template-columns:minmax(0,1.25fr) minmax(300px,.75fr);gap:15px}
+.calc-box{border:1px solid var(--line);border-radius:13px;padding:15px;background:#fff}
+.calc-box h3{margin:0 0 12px;font-size:16px}
+.calc-result{border:1px solid var(--line);border-radius:13px;padding:15px;background:#fbfcfd}
+.calc-result .big{font-size:28px;font-weight:900;letter-spacing:-.03em;margin:5px 0}
+.breakdown{display:grid;gap:7px;margin-top:13px}.breakdown-row{display:flex;justify-content:space-between;gap:15px;padding:7px 0;border-bottom:1px solid #eef1f4;font-size:12px}.breakdown-row:last-child{border-bottom:0}.market-note{font-size:11px;color:var(--muted);line-height:1.5;margin-top:10px}
+.calc-modes{display:flex;gap:7px;margin-bottom:12px}.calc-modes button{flex:1}
+@media(max-width:850px){.calc-layout{grid-template-columns:1fr}}
 @media(max-width:1100px){.grid{grid-template-columns:repeat(3,1fr)}.field,.field.w3{grid-column:span 4}.field.w4{grid-column:span 6}.summary-row{grid-template-columns:1fr 1fr 1fr}.summary-row .name{grid-column:1/-1}}
 @media(max-width:720px){.grid{grid-template-columns:repeat(2,1fr)}.field,.field.w3,.field.w4,.field.w6{grid-column:span 6}.timeline-row{grid-template-columns:1fr 1fr}.timeline-row .desc{grid-column:1/-1}.topbar{display:block}}
 @media(max-width:500px){.container{padding:14px 10px 65px}.grid{grid-template-columns:1fr}.form-grid{grid-template-columns:1fr}.field,.field.w3,.field.w4,.field.w6{grid-column:1}.summary-row{grid-template-columns:1fr}.tabs{margin:0 -2px}.filters select{width:100%}.filters input{max-width:none}.backup-row{align-items:flex-start;flex-direction:column}}
@@ -86,6 +96,8 @@ input:focus,select:focus{outline:2px solid #b2ddff;border-color:#84caff}
     <button class="tab-btn" data-tab="produtos" onclick="trocarAba('produtos')">📦 Produtos <span id="tabCountProdutos" class="tab-count">0</span></button>
     <button class="tab-btn" data-tab="remessas" onclick="trocarAba('remessas')">🚚 Remessas <span id="tabCountRemessas" class="tab-count">0</span></button>
     <button class="tab-btn" data-tab="custos" onclick="trocarAba('custos')">💰 Custos & Lucro</button>
+    <button class="tab-btn" data-tab="calc-shopee" onclick="trocarAba('calc-shopee')">🛒 Calc. Shopee</button>
+    <button class="tab-btn" data-tab="calc-ml" onclick="trocarAba('calc-ml')">🟡 Calc. Mercado Livre</button>
     <button class="tab-btn" data-tab="historico" onclick="trocarAba('historico')">🕘 Histórico</button>
     <button class="tab-btn" data-tab="backup" onclick="trocarAba('backup')">⚙️ Backup</button>
   </nav>
@@ -126,14 +138,19 @@ input:focus,select:focus{outline:2px solid #b2ddff;border-color:#84caff}
           <div class="field"><label>Cotação p/ BRL</label><input id="cotacao" type="number" min="0" step="0.000001" value="1"></div>
           <div class="field"><label>Peso (g)</label><input id="peso" type="number" min="0" step="1" placeholder="0"></div>
           <div class="field"><label>Status</label><select id="status"><option>Comprado</option><option>Na suíte</option><option>Consolidado</option><option>Recebido BR</option></select></div>
-          <div class="field"><label>Venda prevista</label><input id="vendaPrevista" type="number" min="0" step="0.01" placeholder="0,00"></div>
-          <div class="field"><label>Plataforma</label><select id="plataforma"><option value="">Não definida</option><option>Shopee</option><option>Mercado Livre</option><option>OLX</option><option>Outro</option></select></div>
-          <div class="field"><label>Taxa (%)</label><input id="taxaPct" type="number" min="0" step="0.01" value="0"></div>
-          <div class="field"><label>Taxa fixa</label><input id="taxaFixa" type="number" min="0" step="0.01" value="0"></div>
           <div class="field"><label>Produto pago?</label><select id="itemPago"><option value="1">Sim</option><option value="0">Não</option></select></div>
           <div class="field"><label>&nbsp;</label><button class="btn btn-primary" onclick="adicionarItem()">Adicionar produto</button></div>
         </div>
-        <div class="helper">Para JPY/USD, informe a cotação em reais por 1 unidade da moeda. Ex.: se ¥1 = R$ 0,035, use 0,035.</div>
+        <details style="margin-top:12px">
+          <summary style="cursor:pointer;font-size:12px;font-weight:800;color:#475467">+ Dados de revenda (opcional)</summary>
+          <div class="form-grid" style="margin-top:10px">
+            <div class="field w3"><label>Venda prevista</label><input id="vendaPrevista" type="number" min="0" step="0.01" placeholder="0,00"></div>
+            <div class="field w3"><label>Plataforma</label><select id="plataforma"><option value="">Não definida</option><option>Shopee</option><option>Mercado Livre</option><option>OLX</option><option>Outro</option></select></div>
+            <div class="field"><label>Taxa (%)</label><input id="taxaPct" type="number" min="0" step="0.01" value="0"></div>
+            <div class="field"><label>Taxa fixa</label><input id="taxaFixa" type="number" min="0" step="0.01" value="0"></div>
+          </div>
+        </details>
+        <div class="helper">Para JPY/USD, informe a cotação em reais por 1 unidade da moeda. Ex.: se ¥1 = R$ 0,035, use 0,035. Os dados de revenda podem ser preenchidos depois em Detalhes.</div>
       </div>
     </div>
 
@@ -192,6 +209,63 @@ input:focus,select:focus{outline:2px solid #b2ddff;border-color:#84caff}
     <div class="section">
       <div class="section-header">Custo, venda e lucro por item</div>
       <div id="custoContainer"></div>
+    </div>
+  </section>
+
+  <section class="tab-panel" data-tab-panel="calc-shopee">
+    <div class="section">
+      <div class="section-header">Calculadora Shopee <span class="pill blue">Regras 01/10/2026</span></div>
+      <div class="section-body">
+        <div class="calc-layout">
+          <div class="calc-box">
+            <h3>Simular venda</h3>
+            <div class="form-grid">
+              <div class="field w6"><label>Usar custo de produto cadastrado</label><select id="calcShopeeProduto" onchange="carregarProdutoCalc('shopee')"><option value="">Informar manualmente</option></select></div>
+              <div class="field w3"><label>Modo</label><select id="shopeeModo" onchange="atualizarModoCalc('shopee')"><option value="margem">Calcular margem</option><option value="ideal">Calcular preço ideal</option></select></div>
+              <div class="field w3"><label>Custo do produto (R$)</label><input id="shopeeCusto" type="number" min="0" step="0.01" value="0"></div>
+              <div class="field w3" id="shopeeVendaField"><label>Preço de venda (R$)</label><input id="shopeeVenda" type="number" min="0" step="0.01" value="0"></div>
+              <div class="field w3" id="shopeeMargemField" style="display:none"><label>Margem desejada (%)</label><input id="shopeeMargemAlvo" type="number" min="-100" max="95" step="0.1" value="30"></div>
+              <div class="field w3"><label>Shopee Ads (%)</label><input id="shopeeAds" type="number" min="0" step="0.01" value="0"></div>
+              <div class="field w3"><label>Impostos (%)</label><input id="shopeeImpostos" type="number" min="0" step="0.01" value="0"></div>
+              <div class="field w3"><label>Embalagem (R$)</label><input id="shopeeEmbalagem" type="number" min="0" step="0.01" value="0"></div>
+              <div class="field w3"><label>Frete/outro custo (R$)</label><input id="shopeeFreteExtra" type="number" min="0" step="0.01" value="0"></div>
+              <div class="field w3"><label>&nbsp;</label><button class="btn btn-primary" onclick="calcularShopee()">Calcular Shopee</button></div>
+            </div>
+            <div class="market-note">Aplicado automaticamente: até R$ 79,99 = 20% + R$ 4,50; R$ 80–99,99 = 14% + R$ 16; R$ 100–199,99 = 14% + R$ 20; a partir de R$ 200 = 14% + R$ 26.</div>
+          </div>
+          <div id="shopeeResultado" class="calc-result"><div class="empty">Preencha os valores e clique em Calcular.</div></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="tab-panel" data-tab-panel="calc-ml">
+    <div class="section">
+      <div class="section-header">Calculadora Mercado Livre <span class="pill orange">Tarifa editável por categoria</span></div>
+      <div class="section-body">
+        <div class="calc-layout">
+          <div class="calc-box">
+            <h3>Simular venda</h3>
+            <div class="form-grid">
+              <div class="field w6"><label>Usar custo de produto cadastrado</label><select id="calcMLProduto" onchange="carregarProdutoCalc('ml')"><option value="">Informar manualmente</option></select></div>
+              <div class="field w3"><label>Modo</label><select id="mlModo" onchange="atualizarModoCalc('ml')"><option value="margem">Calcular margem</option><option value="ideal">Calcular preço ideal</option></select></div>
+              <div class="field w3"><label>Tipo de anúncio</label><select id="mlTipo" onchange="atualizarTaxaML()"><option value="classico">Clássico</option><option value="premium">Premium</option></select></div>
+              <div class="field w3"><label>Custo do produto (R$)</label><input id="mlCusto" type="number" min="0" step="0.01" value="0"></div>
+              <div class="field w3" id="mlVendaField"><label>Preço de venda (R$)</label><input id="mlVenda" type="number" min="0" step="0.01" value="0"></div>
+              <div class="field w3" id="mlMargemField" style="display:none"><label>Margem desejada (%)</label><input id="mlMargemAlvo" type="number" min="-100" max="95" step="0.1" value="30"></div>
+              <div class="field w3"><label>Tarifa de venda (%)</label><input id="mlComissao" type="number" min="0" max="100" step="0.01" value="12"></div>
+              <div class="field w3"><label>Custo operacional/fixo (R$)</label><input id="mlFixo" type="number" min="0" step="0.01" value="0"></div>
+              <div class="field w3"><label>Frete pago por você (R$)</label><input id="mlFrete" type="number" min="0" step="0.01" value="0"></div>
+              <div class="field w3"><label>Mercado Ads (%)</label><input id="mlAds" type="number" min="0" step="0.01" value="0"></div>
+              <div class="field w3"><label>Impostos (%)</label><input id="mlImpostos" type="number" min="0" step="0.01" value="0"></div>
+              <div class="field w3"><label>Embalagem (R$)</label><input id="mlEmbalagem" type="number" min="0" step="0.01" value="0"></div>
+              <div class="field w3"><label>&nbsp;</label><button class="btn btn-primary" onclick="calcularML()">Calcular Mercado Livre</button></div>
+            </div>
+            <div class="market-note">O padrão inicial é 12% no Clássico e 17% no Premium, mas a tarifa real varia por categoria e faixa. Ajuste a porcentagem e os custos de envio/operação conforme o simulador do seu anúncio.</div>
+          </div>
+          <div id="mlResultado" class="calc-result"><div class="empty">Preencha os valores e clique em Calcular.</div></div>
+        </div>
+      </div>
     </div>
   </section>
 
