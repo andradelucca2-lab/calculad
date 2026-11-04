@@ -250,7 +250,7 @@ function listaRecente() {
 }
 
 function trocarAba(nome) {
-  const permitidas = ["resumo", "produtos", "remessas", "custos", "historico", "backup"];
+  const permitidas = ["resumo", "produtos", "remessas", "custos", "calc-shopee", "calc-ml", "historico", "backup"];
   if (permitidas.indexOf(nome) < 0) nome = "resumo";
   abaAtual = nome;
   sessionStorage.setItem("controle_aba_atual", nome);
@@ -441,8 +441,7 @@ function renderItens() {
   }
 
   let html = '<div class="table-wrap"><table><thead><tr>' +
-    "<th>Produto</th><th>Moeda</th><th>Preço origem</th><th>Cotação</th><th>Custo BRL</th><th>Peso (g)</th><th>Status</th><th>Remessa</th>" +
-    "<th>Venda prevista</th><th>Plataforma</th><th>Taxa %</th><th>Taxa fixa</th><th>Pago?</th><th>Custo final</th><th>Lucro</th><th>Margem</th><th>Ação</th>" +
+    "<th>Produto</th><th>Preço pago</th><th>Peso</th><th>Status</th><th>Remessa</th><th>Custo final</th><th>Lucro</th><th>Ação</th>" +
     "</tr></thead><tbody>";
 
   lista.forEach(function(item) {
@@ -454,27 +453,15 @@ function renderItens() {
     });
 
     html += "<tr>" +
-      '<td><input class="table-input" value="' + esc(item.item) + '" onchange="editarItem(\'' + esc(item.id) + '\',\'item\',this.value)"></td>' +
-      '<td><select class="table-input" onchange="editarItem(\'' + esc(item.id) + '\',\'moeda\',this.value)">' +
-      selectOptions(item.moeda, ["BRL", "JPY", "USD"]) + "</select></td>" +
-      '<td><input class="table-input" type="number" min="0" step="0.01" value="' + num(item.precoOriginal) + '" onchange="editarItem(\'' + esc(item.id) + '\',\'precoOriginal\',this.value)"></td>' +
-      '<td><input class="table-input" type="number" min="0" step="0.000001" value="' + num(item.cotacao) + '"' + (item.moeda === "BRL" ? " disabled" : "") + ' onchange="editarItem(\'' + esc(item.id) + '\',\'cotacao\',this.value)"></td>' +
-      '<td class="num strong">' + moeda.format(item.preco) + "</td>" +
-      '<td><input class="table-input" type="number" min="0" step="1" value="' + (item.peso ? Math.round(item.peso * 1000) : "") + '" onchange="editarItem(\'' + esc(item.id) + '\',\'peso\',this.value)"></td>' +
-      '<td><select class="table-input" onchange="editarItem(\'' + esc(item.id) + '\',\'status\',this.value)">' +
+      '<td class="product-name"><input class="table-input" style="min-width:220px" value="' + esc(item.item) + '" onchange="editarItem(\'' + esc(item.id) + '\',\'item\',this.value)"></td>' +
+      '<td><div class="strong">' + moeda.format(item.preco) + '</div><div style="margin-top:4px"><span class="pill ' + (item.pago ? "green" : "orange") + '">' + (item.pago ? "Pago" : "Pendente") + "</span></div></td>" +
+      '<td><input class="table-input" style="width:90px" type="number" min="0" step="1" value="' + (item.peso ? Math.round(item.peso * 1000) : "") + '" onchange="editarItem(\'' + esc(item.id) + '\',\'peso\',this.value)"> <span class="muted">g</span></td>' +
+      '<td><select class="table-input" style="min-width:125px" onchange="editarItem(\'' + esc(item.id) + '\',\'status\',this.value)">' +
       selectOptions(item.status, ["Comprado", "Na suíte", "Consolidado", "Recebido BR"]) + "</select></td>" +
-      '<td><select class="table-input" onchange="atribuirFrete(\'' + esc(item.id) + '\',this.value)">' + freteOpts + "</select></td>" +
-      '<td><input class="table-input" type="number" min="0" step="0.01" value="' + (item.vendaPrevista || "") + '" onchange="editarItem(\'' + esc(item.id) + '\',\'vendaPrevista\',this.value)"></td>' +
-      '<td><select class="table-input" onchange="editarItem(\'' + esc(item.id) + '\',\'plataforma\',this.value)">' +
-      selectOptions(item.plataforma, ["", "Shopee", "Mercado Livre", "OLX", "Outro"], ["Não definida", "Shopee", "Mercado Livre", "OLX", "Outro"]) + "</select></td>" +
-      '<td><input class="table-input" type="number" min="0" step="0.01" value="' + num(item.taxaPct) + '" onchange="editarItem(\'' + esc(item.id) + '\',\'taxaPct\',this.value)"></td>' +
-      '<td><input class="table-input" type="number" min="0" step="0.01" value="' + num(item.taxaFixa) + '" onchange="editarItem(\'' + esc(item.id) + '\',\'taxaFixa\',this.value)"></td>' +
-      '<td><select class="table-input" onchange="editarItem(\'' + esc(item.id) + '\',\'pago\',this.value)">' +
-      selectOptions(item.pago ? "1" : "0", ["1", "0"], ["Sim", "Não"]) + "</select></td>" +
+      '<td><select class="table-input" style="min-width:155px" onchange="atribuirFrete(\'' + esc(item.id) + '\',this.value)">' + freteOpts + "</select></td>" +
       '<td class="num strong">' + moeda.format(custo(item)) + "</td>" +
-      '<td class="num ' + lucroClasse + '">' + (item.vendaPrevista > 0 ? moeda.format(lucroItem) : "—") + "</td>" +
-      '<td class="num ' + lucroClasse + '">' + (item.vendaPrevista > 0 ? formatPct(margem(item)) : "—") + "</td>" +
-      '<td><div class="toolbar"><button class="btn btn-secondary btn-small" onclick="abrirDetalhes(\'' + esc(item.id) + '\')">Detalhes</button><button class="btn btn-danger btn-small" onclick="excluirItem(\'' + esc(item.id) + '\')">Excluir</button></div></td>' +
+      '<td class="num ' + lucroClasse + '">' + (item.vendaPrevista > 0 ? moeda.format(lucroItem) : "—") + (item.vendaPrevista > 0 ? '<div class="muted" style="font-size:10px;margin-top:3px">' + formatPct(margem(item)) + "</div>" : "") + "</td>" +
+      '<td><button class="btn btn-secondary btn-small" onclick="abrirDetalhes(\'' + esc(item.id) + '\')">Detalhes / Editar</button></td>' +
       "</tr>";
   });
 
@@ -793,33 +780,44 @@ function abrirDetalhes(id) {
   const frete = dados.fretes.find(function(f) { return String(f.id) === String(item.freteId); });
   const compraOrigem = numero.format(item.precoOriginal) + " " + item.moeda;
   const classeLucro = item.vendaPrevista > 0 ? (lucro(item) >= 0 ? "profit-pos" : "profit-neg") : "muted";
+  let freteOpts = '<option value="">Sem remessa</option>';
+  listaRecente().forEach(function(f) {
+    freteOpts += '<option value="' + esc(f.id) + '"' + (String(item.freteId) === String(f.id) ? " selected" : "") + ">" + esc(f.nome) + "</option>";
+  });
+  const refresh = ";setTimeout(function(){abrirDetalhes('" + esc(item.id) + "')},0)";
 
   document.getElementById("detalheTitulo").textContent = item.item;
   document.getElementById("detalheSubtitulo").textContent =
     (frete ? frete.nome : "Sem remessa") + " · " + item.status;
 
-  let html = '<div class="grid" style="grid-template-columns:repeat(3,1fr)">' +
+  let html = '<div class="section" style="margin-bottom:14px"><div class="section-header">Editar produto</div><div class="section-body"><div class="form-grid">' +
+    '<div class="field w4"><label>Produto</label><input value="' + esc(item.item) + '" onchange="editarItem(\'' + esc(item.id) + '\',\'item\',this.value)' + refresh + '"></div>' +
+    '<div class="field"><label>Moeda</label><select onchange="editarItem(\'' + esc(item.id) + '\',\'moeda\',this.value)' + refresh + '">' + selectOptions(item.moeda, ["BRL","JPY","USD"]) + '</select></div>' +
+    '<div class="field"><label>Preço origem</label><input type="number" min="0" step="0.01" value="' + num(item.precoOriginal) + '" onchange="editarItem(\'' + esc(item.id) + '\',\'precoOriginal\',this.value)' + refresh + '"></div>' +
+    '<div class="field"><label>Cotação</label><input type="number" min="0" step="0.000001" value="' + num(item.cotacao) + '"' + (item.moeda === "BRL" ? " disabled" : "") + ' onchange="editarItem(\'' + esc(item.id) + '\',\'cotacao\',this.value)' + refresh + '"></div>' +
+    '<div class="field"><label>Peso (g)</label><input type="number" min="0" step="1" value="' + (item.peso ? Math.round(item.peso*1000) : "") + '" onchange="editarItem(\'' + esc(item.id) + '\',\'peso\',this.value)' + refresh + '"></div>' +
+    '<div class="field"><label>Status</label><select onchange="editarItem(\'' + esc(item.id) + '\',\'status\',this.value)' + refresh + '">' + selectOptions(item.status, ["Comprado","Na suíte","Consolidado","Recebido BR"]) + '</select></div>' +
+    '<div class="field w3"><label>Remessa</label><select onchange="atribuirFrete(\'' + esc(item.id) + '\',this.value)' + refresh + '">' + freteOpts + '</select></div>' +
+    '<div class="field"><label>Venda prevista</label><input type="number" min="0" step="0.01" value="' + (item.vendaPrevista || "") + '" onchange="editarItem(\'' + esc(item.id) + '\',\'vendaPrevista\',this.value)' + refresh + '"></div>' +
+    '<div class="field"><label>Plataforma</label><select onchange="editarItem(\'' + esc(item.id) + '\',\'plataforma\',this.value)' + refresh + '">' + selectOptions(item.plataforma, ["","Shopee","Mercado Livre","OLX","Outro"], ["Não definida","Shopee","Mercado Livre","OLX","Outro"]) + '</select></div>' +
+    '<div class="field"><label>Taxa (%)</label><input type="number" min="0" step="0.01" value="' + num(item.taxaPct) + '" onchange="editarItem(\'' + esc(item.id) + '\',\'taxaPct\',this.value)' + refresh + '"></div>' +
+    '<div class="field"><label>Taxa fixa</label><input type="number" min="0" step="0.01" value="' + num(item.taxaFixa) + '" onchange="editarItem(\'' + esc(item.id) + '\',\'taxaFixa\',this.value)' + refresh + '"></div>' +
+    '<div class="field"><label>Pago?</label><select onchange="editarItem(\'' + esc(item.id) + '\',\'pago\',this.value)' + refresh + '">' + selectOptions(item.pago ? "1":"0",["1","0"],["Sim","Não"]) + '</select></div>' +
+    '</div></div></div>';
+
+  html += '<div class="grid" style="grid-template-columns:repeat(3,1fr)">' +
     '<div class="card"><div class="label">Compra original</div><div class="value">' + esc(compraOrigem) + '</div></div>' +
-    '<div class="card"><div class="label">Cotação usada</div><div class="value">' + numero.format(item.cotacao) + '</div></div>' +
     '<div class="card"><div class="label">Custo em BRL</div><div class="value">' + moeda.format(item.preco) + '</div></div>' +
     '<div class="card"><div class="label">Frete rateado</div><div class="value">' + moeda.format(freteItem(item)) + '</div></div>' +
     '<div class="card"><div class="label">Imposto rateado</div><div class="value">' + moeda.format(impostoItem(item)) + '</div></div>' +
     '<div class="card"><div class="label">Custo final</div><div class="value">' + moeda.format(custo(item)) + '</div></div>' +
-    '<div class="card"><div class="label">Venda prevista</div><div class="value">' + (item.vendaPrevista > 0 ? moeda.format(item.vendaPrevista) : "—") + '</div></div>' +
-    '<div class="card"><div class="label">Taxas de venda</div><div class="value">' + (item.vendaPrevista > 0 ? moeda.format(taxaVenda(item)) : "—") + '</div></div>' +
-    '<div class="card"><div class="label">Venda líquida</div><div class="value">' + (item.vendaPrevista > 0 ? moeda.format(vendaLiquida(item)) : "—") + '</div></div>' +
-    '<div class="card"><div class="label">Lucro previsto</div><div class="value ' + classeLucro + '">' + (item.vendaPrevista > 0 ? moeda.format(lucro(item)) : "—") + '</div></div>' +
-    '<div class="card"><div class="label">Margem</div><div class="value ' + classeLucro + '">' + (item.vendaPrevista > 0 ? formatPct(margem(item)) : "—") + '</div></div>' +
     '<div class="card"><div class="label">Preço mínimo</div><div class="value">' + moeda.format(precoEquilibrio(item)) + '</div></div>' +
+    '<div class="card"><div class="label">Venda prevista</div><div class="value">' + (item.vendaPrevista > 0 ? moeda.format(item.vendaPrevista) : "—") + '</div></div>' +
+    '<div class="card"><div class="label">Venda líquida</div><div class="value">' + (item.vendaPrevista > 0 ? moeda.format(vendaLiquida(item)) : "—") + '</div></div>' +
+    '<div class="card"><div class="label">Lucro / margem</div><div class="value ' + classeLucro + '">' + (item.vendaPrevista > 0 ? moeda.format(lucro(item)) + " · " + formatPct(margem(item)) : "—") + '</div></div>' +
     '</div>';
 
-  html += '<div class="section" style="margin:0"><div class="section-header">Composição</div><div class="section-body">' +
-    '<div class="summary-remessas">' +
-    '<div class="summary-row"><div class="name strong">Preço pago convertido</div><div class="summary-metric">Valor<b>' + moeda.format(item.preco) + '</b></div></div>' +
-    '<div class="summary-row"><div class="name strong">Parte do frete</div><div class="summary-metric">Valor<b>' + moeda.format(freteItem(item)) + '</b></div></div>' +
-    '<div class="summary-row"><div class="name strong">Parte dos impostos</div><div class="summary-metric">Valor<b>' + moeda.format(impostoItem(item)) + '</b></div></div>' +
-    '<div class="summary-row"><div class="name strong">Taxas da venda</div><div class="summary-metric">Valor<b>' + (item.vendaPrevista > 0 ? moeda.format(taxaVenda(item)) : "—") + '</b></div></div>' +
-    '</div></div></div>';
+  html += '<div class="toolbar" style="justify-content:flex-end;margin-top:14px"><button class="btn btn-danger" onclick="fecharDetalhes();excluirItem(\'' + esc(item.id) + '\')">Excluir produto</button></div>';
 
   document.getElementById("detalheConteudo").innerHTML = html;
   document.getElementById("detalheOverlay").style.display = "flex";
@@ -828,6 +826,197 @@ function abrirDetalhes(id) {
 function fecharDetalhes() {
   const overlay = document.getElementById("detalheOverlay");
   if (overlay) overlay.style.display = "none";
+}
+
+function renderCalculadoraProdutos() {
+  ["calcShopeeProduto", "calcMLProduto"].forEach(function(id) {
+    const select = document.getElementById(id);
+    if (!select) return;
+    const atual = select.value;
+    let html = '<option value="">Informar manualmente</option>';
+    dados.itens.forEach(function(item) {
+      html += '<option value="' + esc(item.id) + '">' + esc(item.item) + ' — ' + esc(moeda.format(custo(item))) + '</option>';
+    });
+    select.innerHTML = html;
+    if ([].slice.call(select.options).some(function(o){ return o.value === atual; })) select.value = atual;
+  });
+}
+
+function carregarProdutoCalc(tipo) {
+  const select = document.getElementById(tipo === "shopee" ? "calcShopeeProduto" : "calcMLProduto");
+  if (!select || !select.value) return;
+  const item = dados.itens.find(function(x){ return String(x.id) === String(select.value); });
+  if (!item) return;
+  if (tipo === "shopee") {
+    document.getElementById("shopeeCusto").value = custo(item).toFixed(2);
+    if (item.vendaPrevista > 0) document.getElementById("shopeeVenda").value = item.vendaPrevista.toFixed(2);
+  } else {
+    document.getElementById("mlCusto").value = custo(item).toFixed(2);
+    if (item.vendaPrevista > 0) document.getElementById("mlVenda").value = item.vendaPrevista.toFixed(2);
+  }
+}
+
+function atualizarModoCalc(tipo) {
+  const shopee = tipo === "shopee";
+  const modo = document.getElementById(shopee ? "shopeeModo" : "mlModo").value;
+  document.getElementById(shopee ? "shopeeVendaField" : "mlVendaField").style.display = modo === "margem" ? "" : "none";
+  document.getElementById(shopee ? "shopeeMargemField" : "mlMargemField").style.display = modo === "ideal" ? "" : "none";
+}
+
+function atualizarTaxaML() {
+  const tipo = document.getElementById("mlTipo").value;
+  document.getElementById("mlComissao").value = tipo === "premium" ? "17" : "12";
+}
+
+function taxaFixaShopee(preco) {
+  if (preco <= 79.99) return { pct: 20, fixa: 4.5, faixa: "Até R$ 79,99" };
+  if (preco <= 99.99) return { pct: 14, fixa: 16, faixa: "R$ 80 a R$ 99,99" };
+  if (preco <= 199.99) return { pct: 14, fixa: 20, faixa: "R$ 100 a R$ 199,99" };
+  return { pct: 14, fixa: 26, faixa: "A partir de R$ 200" };
+}
+
+function avaliarShopee(preco, cfg) {
+  const regra = taxaFixaShopee(preco);
+  const comissao = preco * regra.pct / 100;
+  const ads = preco * cfg.ads / 100;
+  const impostos = preco * cfg.impostos / 100;
+  const descontos = comissao + regra.fixa + ads + impostos + cfg.embalagem + cfg.freteExtra;
+  const liquido = preco - descontos;
+  const lucro = liquido - cfg.custo;
+  return {
+    preco: preco, regra: regra, comissao: comissao, ads: ads, impostos: impostos,
+    fixa: regra.fixa, embalagem: cfg.embalagem, frete: cfg.freteExtra,
+    liquido: liquido, lucro: lucro, margem: preco > 0 ? lucro / preco * 100 : 0
+  };
+}
+
+function precoIdealShopee(cfg, alvo) {
+  const segmentos = [
+    { min: 0.01, max: 79.99, pct: 20, fixa: 4.5 },
+    { min: 80, max: 99.99, pct: 14, fixa: 16 },
+    { min: 100, max: 199.99, pct: 14, fixa: 20 },
+    { min: 200, max: 1000000, pct: 14, fixa: 26 }
+  ];
+  const alvoDecimal = alvo / 100;
+  const candidatos = [];
+  segmentos.forEach(function(seg) {
+    const variavel = 1 - seg.pct/100 - cfg.ads/100 - cfg.impostos/100 - alvoDecimal;
+    if (variavel <= 0) return;
+    const base = cfg.custo + seg.fixa + cfg.embalagem + cfg.freteExtra;
+    let p = base / variavel;
+    if (p < seg.min) p = seg.min;
+    if (p <= seg.max + 0.0001) {
+      const r = avaliarShopee(p, cfg);
+      if (r.margem + 0.0001 >= alvo) candidatos.push(r);
+    }
+  });
+  if (!candidatos.length) return null;
+  candidatos.sort(function(a,b){ return a.preco-b.preco; });
+  return candidatos[0];
+}
+
+function avaliarML(preco, cfg) {
+  const comissao = preco * cfg.comissao / 100;
+  const ads = preco * cfg.ads / 100;
+  const impostos = preco * cfg.impostos / 100;
+  const descontos = comissao + cfg.fixo + cfg.frete + ads + impostos + cfg.embalagem;
+  const liquido = preco - descontos;
+  const lucro = liquido - cfg.custo;
+  return {
+    preco: preco, comissao: comissao, ads: ads, impostos: impostos,
+    fixa: cfg.fixo, embalagem: cfg.embalagem, frete: cfg.frete,
+    liquido: liquido, lucro: lucro, margem: preco > 0 ? lucro / preco * 100 : 0
+  };
+}
+
+function precoIdealML(cfg, alvo) {
+  const variavel = 1 - cfg.comissao/100 - cfg.ads/100 - cfg.impostos/100 - alvo/100;
+  if (variavel <= 0) return null;
+  const preco = (cfg.custo + cfg.fixo + cfg.frete + cfg.embalagem) / variavel;
+  if (!Number.isFinite(preco) || preco <= 0) return null;
+  return avaliarML(preco, cfg);
+}
+
+function precoPsicologico(preco) {
+  if (!Number.isFinite(preco) || preco <= 0) return 0;
+  return Math.ceil(preco - 0.9) + 0.9;
+}
+
+function renderResultadoCalc(boxId, titulo, r, extra) {
+  const box = document.getElementById(boxId);
+  if (!box) return;
+  if (!r) {
+    box.innerHTML = '<div class="alert bad">Não foi possível atingir essa margem com as taxas informadas.</div>';
+    return;
+  }
+  const cls = r.lucro >= 0 ? "profit-pos" : "profit-neg";
+  box.innerHTML =
+    '<div class="label">' + esc(titulo) + '</div>' +
+    '<div class="big">' + moeda.format(r.preco) + '</div>' +
+    (extra || "") +
+    '<div class="breakdown">' +
+      '<div class="breakdown-row"><span>Comissão</span><strong>− ' + moeda.format(r.comissao) + '</strong></div>' +
+      '<div class="breakdown-row"><span>Tarifa/custo fixo</span><strong>− ' + moeda.format(r.fixa) + '</strong></div>' +
+      '<div class="breakdown-row"><span>Publicidade</span><strong>− ' + moeda.format(r.ads) + '</strong></div>' +
+      '<div class="breakdown-row"><span>Impostos</span><strong>− ' + moeda.format(r.impostos) + '</strong></div>' +
+      '<div class="breakdown-row"><span>Embalagem</span><strong>− ' + moeda.format(r.embalagem) + '</strong></div>' +
+      '<div class="breakdown-row"><span>Frete/outros</span><strong>− ' + moeda.format(r.frete) + '</strong></div>' +
+      '<div class="breakdown-row"><span>Receita líquida antes do produto</span><strong>' + moeda.format(r.liquido) + '</strong></div>' +
+      '<div class="breakdown-row"><span>Lucro final</span><strong class="' + cls + '">' + moeda.format(r.lucro) + '</strong></div>' +
+      '<div class="breakdown-row"><span>Margem</span><strong class="' + cls + '">' + formatPct(r.margem) + '</strong></div>' +
+    '</div>';
+}
+
+function calcularShopee() {
+  const cfg = {
+    custo: num(document.getElementById("shopeeCusto").value),
+    ads: num(document.getElementById("shopeeAds").value),
+    impostos: num(document.getElementById("shopeeImpostos").value),
+    embalagem: num(document.getElementById("shopeeEmbalagem").value),
+    freteExtra: num(document.getElementById("shopeeFreteExtra").value)
+  };
+  const modo = document.getElementById("shopeeModo").value;
+  let r;
+  let extra = "";
+  if (modo === "ideal") {
+    const alvo = num(document.getElementById("shopeeMargemAlvo").value);
+    r = precoIdealShopee(cfg, alvo);
+    if (r) extra = '<div class="pill green">Preço psicológico: ' + moeda.format(precoPsicologico(r.preco)) + '</div>';
+    renderResultadoCalc("shopeeResultado", "Preço mínimo para a margem desejada", r, extra);
+  } else {
+    const venda = num(document.getElementById("shopeeVenda").value);
+    if (venda <= 0) return alert("Informe o preço de venda.");
+    r = avaliarShopee(venda, cfg);
+    extra = '<div class="pill blue">' + esc(r.regra.faixa) + ' · ' + r.regra.pct + '% + ' + moeda.format(r.regra.fixa) + '</div>';
+    renderResultadoCalc("shopeeResultado", "Preço de venda analisado", r, extra);
+  }
+}
+
+function calcularML() {
+  const cfg = {
+    custo: num(document.getElementById("mlCusto").value),
+    comissao: num(document.getElementById("mlComissao").value),
+    fixo: num(document.getElementById("mlFixo").value),
+    frete: num(document.getElementById("mlFrete").value),
+    ads: num(document.getElementById("mlAds").value),
+    impostos: num(document.getElementById("mlImpostos").value),
+    embalagem: num(document.getElementById("mlEmbalagem").value)
+  };
+  const modo = document.getElementById("mlModo").value;
+  let r;
+  let extra = "";
+  if (modo === "ideal") {
+    const alvo = num(document.getElementById("mlMargemAlvo").value);
+    r = precoIdealML(cfg, alvo);
+    if (r) extra = '<div class="pill green">Preço psicológico: ' + moeda.format(precoPsicologico(r.preco)) + '</div>';
+    renderResultadoCalc("mlResultado", "Preço mínimo para a margem desejada", r, extra);
+  } else {
+    const venda = num(document.getElementById("mlVenda").value);
+    if (venda <= 0) return alert("Informe o preço de venda.");
+    r = avaliarML(venda, cfg);
+    extra = '<div class="pill orange">' + esc(document.getElementById("mlTipo").selectedOptions[0].textContent) + ' · comissão ' + formatPct(cfg.comissao) + '</div>';
+    renderResultadoCalc("mlResultado", "Preço de venda analisado", r, extra);
+  }
 }
 
 function renderCustos() {
@@ -869,6 +1058,7 @@ function render() {
   renderImpostos();
   renderCustos();
   renderResumo();
+  renderCalculadoraProdutos();
   trocarAba(abaAtual);
 }
 
