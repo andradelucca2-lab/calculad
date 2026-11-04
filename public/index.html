@@ -58,6 +58,19 @@ input:focus,select:focus{outline:2px solid #b2ddff;border-color:#84caff}
   </div>
 </div>
 
+<div id="detalheOverlay" class="login" style="display:none;z-index:9998;background:rgba(16,24,40,.45)" onclick="if(event.target===this) fecharDetalhes()">
+  <div class="login-card" style="width:min(760px,100%);max-height:90vh;overflow:auto">
+    <div style="display:flex;justify-content:space-between;gap:12px;align-items:flex-start">
+      <div>
+        <h2 id="detalheTitulo">Detalhes do produto</h2>
+        <div id="detalheSubtitulo" class="subtitle"></div>
+      </div>
+      <button class="btn btn-secondary btn-small" onclick="fecharDetalhes()">Fechar</button>
+    </div>
+    <div id="detalheConteudo" style="margin-top:14px"></div>
+  </div>
+</div>
+
 <div class="status-float"><span id="cloudStatus">☁ Conectando</span></div>
 
 <div class="container">
@@ -131,6 +144,8 @@ input:focus,select:focus{outline:2px solid #b2ddff;border-color:#84caff}
         <select id="filtroStatus" onchange="renderItens()"><option value="todos">Todos os status</option><option>Comprado</option><option>Na suíte</option><option>Consolidado</option><option>Recebido BR</option></select>
         <select id="filtroRemessa" onchange="renderItens()"><option value="todos">Todas as remessas</option><option value="sem">Sem remessa</option></select>
         <select id="filtroPeso" onchange="renderItens()"><option value="todos">Com/sem peso</option><option value="sem">Sem peso</option><option value="com">Com peso</option></select>
+        <input id="filtroPrecoMin" type="number" min="0" step="0.01" placeholder="Custo mín. (R$)" oninput="renderItens()">
+        <input id="filtroPrecoMax" type="number" min="0" step="0.01" placeholder="Custo máx. (R$)" oninput="renderItens()">
         <select id="filtroLucro" onchange="renderItens()"><option value="todos">Todos os resultados</option><option value="lucro">Com lucro</option><option value="prejuizo">Com prejuízo</option><option value="semvenda">Sem venda prevista</option></select>
         <select id="ordenarProdutos" onchange="renderItens()"><option value="recente">Ordem cadastrada</option><option value="custo_desc">Maior custo</option><option value="lucro_desc">Maior lucro</option><option value="lucro_asc">Maior prejuízo</option><option value="peso_desc">Maior peso</option></select>
       </div>
