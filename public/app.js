@@ -389,6 +389,8 @@ function filtrarItens() {
   const status = document.getElementById("filtroStatus")?.value || "todos";
   const remessa = document.getElementById("filtroRemessa")?.value || "todos";
   const peso = document.getElementById("filtroPeso")?.value || "todos";
+  const precoMin = num(document.getElementById("filtroPrecoMin")?.value);
+  const precoMax = num(document.getElementById("filtroPrecoMax")?.value);
   const resultado = document.getElementById("filtroLucro")?.value || "todos";
   const ordem = document.getElementById("ordenarProdutos")?.value || "recente";
 
@@ -399,12 +401,15 @@ function filtrarItens() {
     const okRemessa = remessa === "todos" ||
       (remessa === "sem" ? !item.freteId : String(item.freteId) === String(remessa));
     const okPeso = peso === "todos" || (peso === "sem" ? num(item.peso) <= 0 : num(item.peso) > 0);
+    const custoAtual = custo(item);
+    const okMin = precoMin <= 0 || custoAtual >= precoMin;
+    const okMax = precoMax <= 0 || custoAtual <= precoMax;
     const l = lucro(item);
     const okResultado = resultado === "todos" ||
       (resultado === "lucro" && num(item.vendaPrevista) > 0 && l >= 0) ||
       (resultado === "prejuizo" && num(item.vendaPrevista) > 0 && l < 0) ||
       (resultado === "semvenda" && num(item.vendaPrevista) <= 0);
-    return okBusca && okStatus && okRemessa && okPeso && okResultado;
+    return okBusca && okStatus && okRemessa && okPeso && okMin && okMax && okResultado;
   });
 
   if (ordem === "custo_desc") lista.sort(function(a, b) { return custo(b) - custo(a); });
@@ -469,7 +474,7 @@ function renderItens() {
       '<td class="num strong">' + moeda.format(custo(item)) + "</td>" +
       '<td class="num ' + lucroClasse + '">' + (item.vendaPrevista > 0 ? moeda.format(lucroItem) : "—") + "</td>" +
       '<td class="num ' + lucroClasse + '">' + (item.vendaPrevista > 0 ? formatPct(margem(item)) : "—") + "</td>" +
-      '<td><button class="btn btn-danger btn-small" onclick="excluirItem(\'' + esc(item.id) + '\')">Excluir</button></td>' +
+      '<td><div class="toolbar"><button class="btn btn-secondary btn-small" onclick="abrirDetalhes(\'' + esc(item.id) + '\')">Detalhes</button><button class="btn btn-danger btn-small" onclick="excluirItem(\'' + esc(item.id) + '\')">Excluir</button></div></td>' +
       "</tr>";
   });
 
@@ -779,6 +784,50 @@ function renderResumo() {
   renderResumoRemessas();
   document.getElementById("tabCountProdutos").textContent = String(dados.itens.length);
   document.getElementById("tabCountRemessas").textContent = String(dados.fretes.length);
+}
+
+function abrirDetalhes(id) {
+  const item = dados.itens.find(function(x) { return String(x.id) === String(id); });
+  if (!item) return;
+
+  const frete = dados.fretes.find(function(f) { return String(f.id) === String(item.freteId); });
+  const compraOrigem = numero.format(item.precoOriginal) + " " + item.moeda;
+  const classeLucro = item.vendaPrevista > 0 ? (lucro(item) >= 0 ? "profit-pos" : "profit-neg") : "muted";
+
+  document.getElementById("detalheTitulo").textContent = item.item;
+  document.getElementById("detalheSubtitulo").textContent =
+    (frete ? frete.nome : "Sem remessa") + " · " + item.status;
+
+  let html = '<div class="grid" style="grid-template-columns:repeat(3,1fr)">' +
+    '<div class="card"><div class="label">Compra original</div><div class="value">' + esc(compraOrigem) + '</div></div>' +
+    '<div class="card"><div class="label">Cotação usada</div><div class="value">' + numero.format(item.cotacao) + '</div></div>' +
+    '<div class="card"><div class="label">Custo em BRL</div><div class="value">' + moeda.format(item.preco) + '</div></div>' +
+    '<div class="card"><div class="label">Frete rateado</div><div class="value">' + moeda.format(freteItem(item)) + '</div></div>' +
+    '<div class="card"><div class="label">Imposto rateado</div><div class="value">' + moeda.format(impostoItem(item)) + '</div></div>' +
+    '<div class="card"><div class="label">Custo final</div><div class="value">' + moeda.format(custo(item)) + '</div></div>' +
+    '<div class="card"><div class="label">Venda prevista</div><div class="value">' + (item.vendaPrevista > 0 ? moeda.format(item.vendaPrevista) : "—") + '</div></div>' +
+    '<div class="card"><div class="label">Taxas de venda</div><div class="value">' + (item.vendaPrevista > 0 ? moeda.format(taxaVenda(item)) : "—") + '</div></div>' +
+    '<div class="card"><div class="label">Venda líquida</div><div class="value">' + (item.vendaPrevista > 0 ? moeda.format(vendaLiquida(item)) : "—") + '</div></div>' +
+    '<div class="card"><div class="label">Lucro previsto</div><div class="value ' + classeLucro + '">' + (item.vendaPrevista > 0 ? moeda.format(lucro(item)) : "—") + '</div></div>' +
+    '<div class="card"><div class="label">Margem</div><div class="value ' + classeLucro + '">' + (item.vendaPrevista > 0 ? formatPct(margem(item)) : "—") + '</div></div>' +
+    '<div class="card"><div class="label">Preço mínimo</div><div class="value">' + moeda.format(precoEquilibrio(item)) + '</div></div>' +
+    '</div>';
+
+  html += '<div class="section" style="margin:0"><div class="section-header">Composição</div><div class="section-body">' +
+    '<div class="summary-remessas">' +
+    '<div class="summary-row"><div class="name strong">Preço pago convertido</div><div class="summary-metric">Valor<b>' + moeda.format(item.preco) + '</b></div></div>' +
+    '<div class="summary-row"><div class="name strong">Parte do frete</div><div class="summary-metric">Valor<b>' + moeda.format(freteItem(item)) + '</b></div></div>' +
+    '<div class="summary-row"><div class="name strong">Parte dos impostos</div><div class="summary-metric">Valor<b>' + moeda.format(impostoItem(item)) + '</b></div></div>' +
+    '<div class="summary-row"><div class="name strong">Taxas da venda</div><div class="summary-metric">Valor<b>' + (item.vendaPrevista > 0 ? moeda.format(taxaVenda(item)) : "—") + '</b></div></div>' +
+    '</div></div></div>';
+
+  document.getElementById("detalheConteudo").innerHTML = html;
+  document.getElementById("detalheOverlay").style.display = "flex";
+}
+
+function fecharDetalhes() {
+  const overlay = document.getElementById("detalheOverlay");
+  if (overlay) overlay.style.display = "none";
 }
 
 function renderCustos() {
