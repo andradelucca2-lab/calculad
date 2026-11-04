@@ -51,6 +51,68 @@ input:focus,select:focus{outline:2px solid #b2ddff;border-color:#84caff}
 .calc-result .big{font-size:28px;font-weight:900;letter-spacing:-.03em;margin:5px 0}
 .breakdown{display:grid;gap:7px;margin-top:13px}.breakdown-row{display:flex;justify-content:space-between;gap:15px;padding:7px 0;border-bottom:1px solid #eef1f4;font-size:12px}.breakdown-row:last-child{border-bottom:0}.market-note{font-size:11px;color:var(--muted);line-height:1.5;margin-top:10px}
 .calc-modes{display:flex;gap:7px;margin-bottom:12px}.calc-modes button{flex:1}
+.theme-picker{display:flex;align-items:center;gap:6px;padding:5px;background:#fff;border:1px solid #d0d5dd;border-radius:12px;box-shadow:0 2px 8px rgba(16,24,40,.04)}
+.theme-btn{border:0;background:transparent;color:#475467;border-radius:8px;padding:7px 9px;font-size:12px;font-weight:800;white-space:nowrap}
+.theme-btn:hover{background:#f2f4f7}.theme-btn.active{background:#111827;color:#fff}
+body[data-theme="dark"]{--bg:#0a0f1c;--card:#111827;--text:#f3f4f6;--muted:#98a2b3;--line:#283548;--dark:#2563eb;--soft:#0f172a;--green:#6ce9a6;--greenbg:#073b2a;--red:#fda29b;--redbg:#4a1818;--orange:#fec84b;--orangebg:#3b2a0a;--blue:#84adff;--bluebg:#102a56}
+body[data-theme="dark"] .tabs{background:rgba(10,15,28,.96)}
+body[data-theme="dark"] .tab-btn,
+body[data-theme="dark"] input,
+body[data-theme="dark"] select,
+body[data-theme="dark"] .theme-picker,
+body[data-theme="dark"] .calc-box,
+body[data-theme="dark"] .remessa-card,
+body[data-theme="dark"] .timeline-row,
+body[data-theme="dark"] .backup-row,
+body[data-theme="dark"] .login-card{background:#111827;color:#f3f4f6;border-color:#344054}
+body[data-theme="dark"] .tab-btn{color:#d0d5dd}
+body[data-theme="dark"] .tab-btn:hover,
+body[data-theme="dark"] .theme-btn:hover{background:#1f2937}
+body[data-theme="dark"] .tab-btn.active,
+body[data-theme="dark"] .theme-btn.active,
+body[data-theme="dark"] .btn-primary{background:#2563eb;color:#fff;border-color:#2563eb}
+body[data-theme="dark"] .theme-btn{color:#d0d5dd}
+body[data-theme="dark"] .filters,
+body[data-theme="dark"] th,
+body[data-theme="dark"] .remessa-edit,
+body[data-theme="dark"] .calc-result{background:#0f172a;color:#d0d5dd;border-color:#283548}
+body[data-theme="dark"] td{border-color:#1f2937}
+body[data-theme="dark"] .btn-secondary{background:#1f2937;color:#e5e7eb}
+body[data-theme="dark"] .pill{background:#1f2937;color:#d0d5dd}
+body[data-theme="dark"] .login{background:rgba(10,15,28,.98)}
+body[data-theme="dark"] .summary-row,
+body[data-theme="dark"] .calc-result,
+body[data-theme="dark"] .calc-box{border-color:#283548}
+body[data-theme="dark"] .breakdown-row{border-color:#253047}
+body[data-theme="dark"] .progress{background:#253047}
+body[data-theme="dark"] .progress>span{background:#60a5fa}
+body[data-theme="blue"]{--bg:#eaf2ff;--card:#f8fbff;--text:#102a43;--muted:#5c6f82;--line:#c9d9ee;--dark:#1d4ed8;--soft:#eef5ff;--green:#087443;--greenbg:#e8fff3;--red:#b42318;--redbg:#fff0ef;--orange:#a65a00;--orangebg:#fff6df;--blue:#1d4ed8;--bluebg:#dbeafe}
+body[data-theme="blue"] .tabs{background:rgba(234,242,255,.96)}
+body[data-theme="blue"] .tab-btn,
+body[data-theme="blue"] .theme-picker,
+body[data-theme="blue"] input,
+body[data-theme="blue"] select,
+body[data-theme="blue"] .calc-box,
+body[data-theme="blue"] .remessa-card,
+body[data-theme="blue"] .timeline-row,
+body[data-theme="blue"] .backup-row,
+body[data-theme="blue"] .login-card{background:#f8fbff;color:#102a43;border-color:#bfd3ee}
+body[data-theme="blue"] .tab-btn{color:#294766}
+body[data-theme="blue"] .tab-btn:hover,
+body[data-theme="blue"] .theme-btn:hover{background:#e1ecfb}
+body[data-theme="blue"] .tab-btn.active,
+body[data-theme="blue"] .theme-btn.active,
+body[data-theme="blue"] .btn-primary{background:#1d4ed8;color:#fff;border-color:#1d4ed8}
+body[data-theme="blue"] .theme-btn{color:#294766}
+body[data-theme="blue"] .filters,
+body[data-theme="blue"] th,
+body[data-theme="blue"] .remessa-edit,
+body[data-theme="blue"] .calc-result{background:#eef5ff;color:#294766;border-color:#c9d9ee}
+body[data-theme="blue"] td{border-color:#dbe7f5}
+body[data-theme="blue"] .btn-secondary{background:#dfeafb;color:#244b74}
+body[data-theme="blue"] .pill{background:#e1ecfb;color:#294766}
+body[data-theme="blue"] .login{background:rgba(234,242,255,.98)}
+body[data-theme="blue"] .breakdown-row{border-color:#d5e2f2}
 @media(max-width:850px){.calc-layout{grid-template-columns:1fr}}
 @media(max-width:1100px){.grid{grid-template-columns:repeat(3,1fr)}.field,.field.w3{grid-column:span 4}.field.w4{grid-column:span 6}.summary-row{grid-template-columns:1fr 1fr 1fr}.summary-row .name{grid-column:1/-1}}
 @media(max-width:720px){.grid{grid-template-columns:repeat(2,1fr)}.field,.field.w3,.field.w4,.field.w6{grid-column:span 6}.timeline-row{grid-template-columns:1fr 1fr}.timeline-row .desc{grid-column:1/-1}.topbar{display:block}}
@@ -88,6 +150,11 @@ input:focus,select:focus{outline:2px solid #b2ddff;border-color:#84caff}
     <div>
       <h1>Compras, Fretes e Revenda</h1>
       <div class="subtitle">Controle custo real, remessas, impostos, pagamentos, lucro e margem em um só lugar.</div>
+    </div>
+    <div class="theme-picker" aria-label="Tema do sistema">
+      <button type="button" class="theme-btn" data-theme-choice="claro" onclick="mudarTema('claro')" title="Tema claro">☀️ Claro</button>
+      <button type="button" class="theme-btn" data-theme-choice="escuro" onclick="mudarTema('escuro')" title="Tema escuro">🌙 Escuro</button>
+      <button type="button" class="theme-btn" data-theme-choice="azul" onclick="mudarTema('azul')" title="Tema azul">🔵 Azul</button>
     </div>
   </div>
 
