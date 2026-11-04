@@ -4,6 +4,7 @@ const API = "/api";
 
 let appKey = sessionStorage.getItem("controle_app_key") || "";
 let abaAtual = sessionStorage.getItem("controle_aba_atual") || "resumo";
+let temaAtual = localStorage.getItem("controle_tema") || "claro";
 let dados = { itens: [], fretes: [], impostos: [] };
 const timers = new Map();
 
@@ -23,14 +24,34 @@ function esc(s) {
   });
 }
 
+function aplicarTema(tema) {
+  const permitidos = ["claro", "escuro", "azul"];
+  if (permitidos.indexOf(tema) < 0) tema = "claro";
+  temaAtual = tema;
+
+  const mapa = { claro: "light", escuro: "dark", azul: "blue" };
+  document.body.dataset.theme = mapa[tema];
+  document.documentElement.style.colorScheme = tema === "escuro" ? "dark" : "light";
+
+  document.querySelectorAll("[data-theme-choice]").forEach(function(btn) {
+    btn.classList.toggle("active", btn.dataset.themeChoice === tema);
+    btn.setAttribute("aria-pressed", btn.dataset.themeChoice === tema ? "true" : "false");
+  });
+}
+
+function mudarTema(tema) {
+  localStorage.setItem("controle_tema", tema);
+  aplicarTema(tema);
+}
+
 function setStatus(texto, ok) {
   if (ok === undefined) ok = true;
   const el = document.getElementById("cloudStatus");
   if (!el) return;
   el.textContent = (ok ? "☁ " : "⚠ ") + texto;
-  el.style.background = ok ? "#ecfdf3" : "#fffaeb";
-  el.style.color = ok ? "#067647" : "#b54708";
-  el.style.borderColor = ok ? "#abefc6" : "#fedf89";
+  el.style.background = ok ? "var(--greenbg)" : "var(--orangebg)";
+  el.style.color = ok ? "var(--green)" : "var(--orange)";
+  el.style.borderColor = "var(--line)";
 }
 
 async function apiFetch(path, options) {
@@ -1159,6 +1180,7 @@ async function restaurarBackup(id) {
 }
 
 document.addEventListener("DOMContentLoaded", function() {
+  aplicarTema(temaAtual);
   trocarAba(abaAtual);
   if (appKey) entrar();
   else document.getElementById("appPassword")?.focus();
