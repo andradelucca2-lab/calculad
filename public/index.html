@@ -3,188 +3,211 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Controle de Compras e Fretes</title>
+<title>Controle de Compras, Fretes e Revenda</title>
 <style>
 *{box-sizing:border-box}
-body{margin:0;font-family:Inter,Arial,sans-serif;background:#f5f6f8;color:#1f2937}
-.container{max-width:1180px;margin:auto;padding:24px 16px 45px}
-h1{margin:0 0 5px;font-size:28px}.subtitle{color:#6b7280;margin-bottom:22px}
-.grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:18px}
-.card,.section{background:#fff;border:1px solid #e5e7eb;border-radius:14px;box-shadow:0 2px 8px rgba(0,0,0,.04)}
-.card{padding:16px}.label{font-size:13px;color:#6b7280}.value{font-size:21px;font-weight:700;margin-top:5px}
-.section{margin-bottom:16px;overflow:hidden}.section-header{padding:16px 18px;border-bottom:1px solid #e5e7eb;font-weight:700}
-.form{padding:16px;display:grid;grid-template-columns:2fr 1fr 1fr 1fr auto;gap:10px}
-.form.small{grid-template-columns:1.7fr 1fr 1.2fr auto}
-input,select,button{width:100%;min-height:42px;border-radius:9px;border:1px solid #d1d5db;padding:9px 11px;font-size:14px;background:#fff}
-button{cursor:pointer;font-weight:700;border:0}.btn-primary{background:#111827;color:#fff}.btn-secondary{background:#eef0f3;color:#374151}
-.btn-danger{background:#fee2e2;color:#991b1b;width:auto;padding:0 10px;min-height:36px}
-.helper{padding:0 16px 14px;color:#6b7280;font-size:13px}
-.table-wrap{overflow-x:auto}table{width:100%;border-collapse:collapse;min-width:980px}
-th,td{padding:11px 10px;border-bottom:1px solid #eef0f2;text-align:left;font-size:14px;vertical-align:middle}
-th{background:#f8fafc;font-size:13px;color:#4b5563}
-td input,td select{min-height:36px;padding:6px 8px}
-.empty{padding:26px 16px;text-align:center;color:#6b7280}
-.actions{display:flex;gap:6px}.pill{display:inline-block;padding:5px 8px;border-radius:999px;background:#eef2ff;font-size:12px}
-.remessa-list{padding:12px 16px 16px;display:grid;gap:10px}
-.remessa{border:1px solid #e5e7eb;border-radius:12px;padding:13px}
-.remessa-top{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:9px}
-.remessa-name{font-weight:700}.muted{color:#6b7280;font-size:13px}
-.remessa-meta{display:flex;flex-wrap:wrap;gap:7px;font-size:13px;margin-bottom:10px}
-.remessa-items{font-size:13px;color:#4b5563;margin-bottom:10px}
-.note{padding:12px 16px 16px;color:#6b7280;font-size:13px}
-.kpi{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;padding:14px 16px}
-.kpi div{background:#f8fafc;border-radius:10px;padding:11px}
-.kpi strong{display:block;font-size:16px;margin-top:3px}
-.tabs{position:sticky;top:0;z-index:30;display:flex;gap:8px;overflow-x:auto;padding:10px 0 14px;margin-bottom:14px;background:#f5f6f8;scrollbar-width:thin}
-.tab-btn{width:auto;min-width:max-content;display:flex;align-items:center;gap:7px;border:1px solid #d1d5db;background:#fff;color:#4b5563;padding:9px 13px;border-radius:10px}
-.tab-btn:hover{background:#f8fafc}
-.tab-btn.active{background:#111827;color:#fff;border-color:#111827}
-.tab-count{display:inline-flex;align-items:center;justify-content:center;min-width:22px;height:22px;padding:0 6px;border-radius:999px;background:#eef0f3;color:#4b5563;font-size:11px}
-.tab-btn.active .tab-count{background:#374151;color:#fff}
-.tab-panel{display:none}
-.tab-panel.active{display:block}
-.summary-section .section-header{display:flex;align-items:center;justify-content:space-between}
-.summary-remessas{padding:14px 16px;display:grid;gap:10px}
-.summary-remessa{display:grid;grid-template-columns:minmax(180px,1fr) repeat(3,minmax(105px,auto));gap:12px;align-items:center;border:1px solid #e5e7eb;border-radius:11px;padding:12px 13px}
-.summary-remessa strong{display:block}
-.summary-remessa .summary-metric{font-size:12px;color:#6b7280}
-.summary-remessa .summary-metric b{display:block;color:#1f2937;font-size:14px;margin-top:2px}
-.summary-actions{padding:0 16px 16px;display:flex;justify-content:flex-end}
-.summary-actions button{width:auto}
-@media(max-width:1000px){.grid{grid-template-columns:repeat(3,1fr)}}
-@media(max-width:850px){.grid{grid-template-columns:repeat(2,1fr)}.form,.form.small{grid-template-columns:1fr 1fr}.form button,.form.small button{grid-column:1/-1}}
-@media(max-width:700px){.summary-remessa{grid-template-columns:1fr 1fr}.summary-remessa .summary-name{grid-column:1/-1}}
-@media(max-width:500px){.grid{grid-template-columns:1fr}.form,.form.small{grid-template-columns:1fr}.tabs{margin-left:-4px;margin-right:-4px}.summary-remessa{grid-template-columns:1fr}}
+:root{--bg:#f4f6f8;--card:#fff;--text:#172033;--muted:#667085;--line:#e4e7ec;--dark:#111827;--soft:#f8fafc;--green:#067647;--greenbg:#ecfdf3;--red:#b42318;--redbg:#fef3f2;--orange:#b54708;--orangebg:#fffaeb;--blue:#175cd3;--bluebg:#eff8ff}
+body{margin:0;font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:var(--bg);color:var(--text)}
+button,input,select{font:inherit}
+button{cursor:pointer}
+.container{max-width:1320px;margin:auto;padding:22px 16px 70px}
+.topbar{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;margin-bottom:14px}
+h1{margin:0;font-size:27px;letter-spacing:-.02em}.subtitle{color:var(--muted);margin-top:5px;font-size:14px}
+.tabs{position:sticky;top:0;z-index:25;display:flex;gap:8px;overflow-x:auto;padding:10px 0 13px;background:rgba(244,246,248,.96);backdrop-filter:blur(8px);scrollbar-width:thin}
+.tab-btn{width:auto;white-space:nowrap;border:1px solid #d0d5dd;background:#fff;color:#475467;border-radius:11px;padding:9px 13px;font-weight:750}
+.tab-btn.active{background:var(--dark);color:#fff;border-color:var(--dark)}
+.tab-count{display:inline-flex;align-items:center;justify-content:center;min-width:21px;height:21px;border-radius:999px;padding:0 6px;margin-left:4px;background:#f2f4f7;color:#475467;font-size:11px}
+.tab-btn.active .tab-count{background:#344054;color:#fff}
+.tab-panel{display:none}.tab-panel.active{display:block}
+.grid{display:grid;grid-template-columns:repeat(5,1fr);gap:11px;margin-bottom:16px}
+.card,.section{background:var(--card);border:1px solid var(--line);border-radius:14px;box-shadow:0 2px 8px rgba(16,24,40,.035)}
+.card{padding:15px}.label{font-size:12px;color:var(--muted)}.value{font-size:20px;font-weight:800;margin-top:5px;letter-spacing:-.02em}
+.section{margin-bottom:15px;overflow:hidden}.section-header{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:15px 17px;border-bottom:1px solid var(--line);font-weight:800}
+.section-body{padding:15px 16px}.helper{color:var(--muted);font-size:12px;margin-top:9px;line-height:1.45}
+.form-grid{display:grid;grid-template-columns:repeat(12,1fr);gap:9px;align-items:end}.field{display:flex;flex-direction:column;gap:5px;grid-column:span 2}.field.w3{grid-column:span 3}.field.w4{grid-column:span 4}.field.w6{grid-column:span 6}.field label{font-size:11px;color:var(--muted);font-weight:700}
+input,select{width:100%;min-height:40px;border:1px solid #d0d5dd;border-radius:9px;background:#fff;padding:8px 10px;color:var(--text)}
+input:focus,select:focus{outline:2px solid #b2ddff;border-color:#84caff}
+.btn{border:0;border-radius:9px;min-height:40px;padding:8px 12px;font-weight:800;width:auto}.btn-primary{background:var(--dark);color:#fff}.btn-secondary{background:#eef2f6;color:#344054}.btn-danger{background:#fee4e2;color:#912018}.btn-small{min-height:34px;padding:6px 9px;font-size:12px}
+.filters{display:flex;flex-wrap:wrap;gap:8px;padding:12px 16px;border-bottom:1px solid var(--line);background:#fbfcfd}.filters input{flex:1 1 220px;max-width:340px}.filters select{width:auto;min-width:140px}
+.table-wrap{overflow:auto}table{width:100%;border-collapse:collapse;min-width:1180px}th,td{padding:10px 9px;border-bottom:1px solid #eef1f4;text-align:left;font-size:12px;vertical-align:middle}th{position:sticky;top:0;background:#f8fafc;color:#475467;font-size:11px;z-index:2}.table-input{min-height:34px;padding:5px 7px;font-size:12px}.num{text-align:right}.strong{font-weight:800}.muted{color:var(--muted)}
+.pill{display:inline-flex;align-items:center;gap:5px;border-radius:999px;padding:5px 8px;background:#f2f4f7;color:#475467;font-size:11px;font-weight:750}.pill.green{background:var(--greenbg);color:var(--green)}.pill.red{background:var(--redbg);color:var(--red)}.pill.orange{background:var(--orangebg);color:var(--orange)}.pill.blue{background:var(--bluebg);color:var(--blue)}
+.profit-pos{color:var(--green);font-weight:800}.profit-neg{color:var(--red);font-weight:800}
+.alert-list{display:grid;gap:8px}.alert{border-radius:10px;padding:10px 12px;font-size:12px;border:1px solid #fedf89;background:#fffaeb;color:#7a2e0e}.alert.bad{border-color:#fecdca;background:#fef3f2;color:#912018}.alert.ok{border-color:#abefc6;background:#ecfdf3;color:#05603a}
+.remessa-list{display:grid;gap:11px}.remessa-card{border:1px solid var(--line);border-radius:13px;overflow:hidden;background:#fff}.remessa-head{padding:13px 14px;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}.remessa-title{font-weight:850}.remessa-metrics{display:flex;gap:7px;flex-wrap:wrap}.remessa-edit{padding:13px 14px;border-top:1px solid var(--line);background:#fbfcfd}.progress{height:7px;background:#eaecf0;border-radius:999px;overflow:hidden;min-width:140px}.progress>span{display:block;height:100%;background:#667085}
+.summary-remessas{display:grid;gap:9px}.summary-row{display:grid;grid-template-columns:minmax(180px,1fr) repeat(5,minmax(90px,auto));gap:10px;align-items:center;border:1px solid var(--line);border-radius:11px;padding:11px 12px}.summary-metric{font-size:10px;color:var(--muted)}.summary-metric b{display:block;color:var(--text);font-size:12px;margin-top:2px}
+.timeline{display:grid;gap:9px}.timeline-row{display:grid;grid-template-columns:155px 90px 110px 1fr;gap:10px;padding:10px 12px;border:1px solid var(--line);border-radius:10px;font-size:12px;background:#fff}
+.backup-list{display:grid;gap:8px}.backup-row{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:10px 12px;border:1px solid var(--line);border-radius:10px}
+.empty{padding:28px 16px;text-align:center;color:var(--muted);font-size:13px}
+.status-float{position:fixed;right:14px;bottom:14px;z-index:40}
+#cloudStatus{display:inline-flex;align-items:center;border-radius:999px;padding:7px 11px;background:#eef2ff;color:#3730a3;border:1px solid #c7d2fe;font-size:11px;font-weight:800;box-shadow:0 4px 14px #0001}
+.login{position:fixed;inset:0;background:rgba(244,246,248,.98);z-index:9999;display:flex;align-items:center;justify-content:center;padding:20px}.login-card{width:min(390px,100%);padding:24px;background:#fff;border:1px solid var(--line);border-radius:16px;box-shadow:0 20px 60px #1018281a}.login-card h2{margin:0 0 6px}.login-card input{margin:12px 0 9px}.login-card button{width:100%}
+.toolbar{display:flex;gap:8px;flex-wrap:wrap}
+@media(max-width:1100px){.grid{grid-template-columns:repeat(3,1fr)}.field,.field.w3{grid-column:span 4}.field.w4{grid-column:span 6}.summary-row{grid-template-columns:1fr 1fr 1fr}.summary-row .name{grid-column:1/-1}}
+@media(max-width:720px){.grid{grid-template-columns:repeat(2,1fr)}.field,.field.w3,.field.w4,.field.w6{grid-column:span 6}.timeline-row{grid-template-columns:1fr 1fr}.timeline-row .desc{grid-column:1/-1}.topbar{display:block}}
+@media(max-width:500px){.container{padding:14px 10px 65px}.grid{grid-template-columns:1fr}.form-grid{grid-template-columns:1fr}.field,.field.w3,.field.w4,.field.w6{grid-column:1}.summary-row{grid-template-columns:1fr}.tabs{margin:0 -2px}.filters select{width:100%}.filters input{max-width:none}.backup-row{align-items:flex-start;flex-direction:column}}
 </style>
 </head>
 <body>
-
-<div id="loginOverlay" style="position:fixed;inset:0;background:rgba(245,246,248,.97);z-index:9999;display:flex;align-items:center;justify-content:center;padding:20px">
-  <div class="card" style="width:min(380px,100%);padding:24px">
-    <h2 style="margin:0 0 7px;font-size:22px">Controle de Compras</h2>
-    <div class="subtitle" style="margin-bottom:16px">Digite a senha de acesso.</div>
-    <input id="appPassword" type="password" placeholder="Senha" onkeydown="if(event.key==='Enter') entrar()" style="margin-bottom:10px">
-    <button class="btn-primary" onclick="entrar()">Entrar</button>
-    <div id="loginError" style="display:none;color:#991b1b;font-size:13px;margin-top:10px">Senha incorreta ou servidor indisponível.</div>
+<div id="loginOverlay" class="login">
+  <div class="login-card">
+    <h2>Controle de Compras</h2>
+    <div class="subtitle">Digite a senha de acesso.</div>
+    <input id="appPassword" type="password" placeholder="Senha" onkeydown="if(event.key==='Enter') entrar()">
+    <button class="btn btn-primary" onclick="entrar()">Entrar</button>
+    <div id="loginError" style="display:none;color:#b42318;font-size:12px;margin-top:9px">Senha incorreta ou servidor indisponível.</div>
   </div>
 </div>
-<div style="position:fixed;right:14px;bottom:14px;z-index:20"><span id="cloudStatus" class="pill" style="background:#eef2ff">☁ Salvando na nuvem</span></div>
+
+<div class="status-float"><span id="cloudStatus">☁ Conectando</span></div>
 
 <div class="container">
-  <h1>Controle de Compras e Fretes</h1>
-  <div class="subtitle">Cadastre os produtos em BRL, coloque o peso quando chegarem e organize vários fretes consolidados.</div>
+  <div class="topbar">
+    <div>
+      <h1>Compras, Fretes e Revenda</h1>
+      <div class="subtitle">Controle custo real, remessas, impostos, pagamentos, lucro e margem em um só lugar.</div>
+    </div>
+  </div>
 
-  <nav class="tabs" role="tablist" aria-label="Navegação principal">
-    <button type="button" class="tab-btn active" data-tab="resumo" onclick="trocarAba('resumo')" role="tab">📊 Resumo</button>
-    <button type="button" class="tab-btn" data-tab="produtos" onclick="trocarAba('produtos')" role="tab">📦 Produtos <span class="tab-count" id="tabCountProdutos">0</span></button>
-    <button type="button" class="tab-btn" data-tab="remessas" onclick="trocarAba('remessas')" role="tab">🚚 Remessas <span class="tab-count" id="tabCountRemessas">0</span></button>
-    <button type="button" class="tab-btn" data-tab="custos" onclick="trocarAba('custos')" role="tab">💰 Custos</button>
-    <button type="button" class="tab-btn" data-tab="backup" onclick="trocarAba('backup')" role="tab">⚙️ Backup</button>
+  <nav class="tabs" role="tablist">
+    <button class="tab-btn active" data-tab="resumo" onclick="trocarAba('resumo')">📊 Resumo</button>
+    <button class="tab-btn" data-tab="produtos" onclick="trocarAba('produtos')">📦 Produtos <span id="tabCountProdutos" class="tab-count">0</span></button>
+    <button class="tab-btn" data-tab="remessas" onclick="trocarAba('remessas')">🚚 Remessas <span id="tabCountRemessas" class="tab-count">0</span></button>
+    <button class="tab-btn" data-tab="custos" onclick="trocarAba('custos')">💰 Custos & Lucro</button>
+    <button class="tab-btn" data-tab="historico" onclick="trocarAba('historico')">🕘 Histórico</button>
+    <button class="tab-btn" data-tab="backup" onclick="trocarAba('backup')">⚙️ Backup</button>
   </nav>
 
   <section class="tab-panel active" data-tab-panel="resumo">
-  <div class="grid">
-    <div class="card"><div class="label">Total dos itens</div><div class="value" id="totalItens">R$ 0,00</div></div>
-    <div class="card"><div class="label">Total dos fretes</div><div class="value" id="totalFretes">R$ 0,00</div></div>
-    <div class="card"><div class="label">Impostos no Brasil</div><div class="value" id="totalImpostos">R$ 0,00</div></div>
-    <div class="card"><div class="label">Já pago</div><div class="value" id="jaPago">R$ 0,00</div></div>
-    <div class="card"><div class="label">Custo final</div><div class="value" id="custoFinal">R$ 0,00</div></div>
-  </div>
-
-  <div class="section summary-section">
-    <div class="section-header">Visão geral das remessas</div>
-    <div id="resumoRemessas"></div>
-    <div class="summary-actions">
-      <button type="button" class="btn-secondary" onclick="trocarAba('remessas')">Ver todas as remessas</button>
+    <div class="grid">
+      <div class="card"><div class="label">Produtos</div><div class="value" id="totalItens">R$ 0,00</div></div>
+      <div class="card"><div class="label">Fretes</div><div class="value" id="totalFretes">R$ 0,00</div></div>
+      <div class="card"><div class="label">Impostos</div><div class="value" id="totalImpostos">R$ 0,00</div></div>
+      <div class="card"><div class="label">Custo final</div><div class="value" id="custoFinal">R$ 0,00</div></div>
+      <div class="card"><div class="label">Venda prevista</div><div class="value" id="vendaPrevistaTotal">R$ 0,00</div></div>
+      <div class="card"><div class="label">Lucro previsto</div><div class="value" id="lucroPrevistoTotal">R$ 0,00</div></div>
+      <div class="card"><div class="label">Pago em produtos</div><div class="value" id="pagoProdutos">R$ 0,00</div></div>
+      <div class="card"><div class="label">Pago em fretes</div><div class="value" id="pagoFretes">R$ 0,00</div></div>
+      <div class="card"><div class="label">Pago em impostos</div><div class="value" id="pagoImpostos">R$ 0,00</div></div>
+      <div class="card"><div class="label">Falta pagar</div><div class="value" id="faltaPagar">R$ 0,00</div></div>
     </div>
-  </div>
+
+    <div class="section">
+      <div class="section-header">Alertas automáticos <span id="alertCount" class="pill">0</span></div>
+      <div class="section-body"><div id="alertasContainer" class="alert-list"></div></div>
+    </div>
+
+    <div class="section">
+      <div class="section-header">Visão das remessas <button class="btn btn-secondary btn-small" onclick="trocarAba('remessas')">Abrir remessas</button></div>
+      <div class="section-body"><div id="resumoRemessas" class="summary-remessas"></div></div>
+    </div>
   </section>
 
   <section class="tab-panel" data-tab-panel="produtos">
-  <div class="section">
-    <div class="section-header">Produtos</div>
-    <div class="form">
-      <input id="item" placeholder="Ex.: Controle PS3">
-      <input id="preco" type="number" min="0" step="0.01" placeholder="Preço pago (R$)">
-      <input id="peso" type="number" min="0" step="1" placeholder="Peso (g)">
-      <select id="status">
-        <option>Comprado</option><option>Na suíte</option><option>Consolidado</option><option>Recebido BR</option>
-      </select>
-      <button class="btn-primary" onclick="adicionarItem()">Adicionar</button>
+    <div class="section">
+      <div class="section-header">Novo produto</div>
+      <div class="section-body">
+        <div class="form-grid">
+          <div class="field w3"><label>Produto</label><input id="item" placeholder="Ex.: PSP 3000 Azul"></div>
+          <div class="field"><label>Moeda</label><select id="moeda" onchange="ajustarCotacaoCadastro()"><option value="BRL">BRL</option><option value="JPY">JPY</option><option value="USD">USD</option></select></div>
+          <div class="field"><label>Preço na moeda</label><input id="precoOriginal" type="number" min="0" step="0.01" placeholder="0,00"></div>
+          <div class="field"><label>Cotação p/ BRL</label><input id="cotacao" type="number" min="0" step="0.000001" value="1"></div>
+          <div class="field"><label>Peso (g)</label><input id="peso" type="number" min="0" step="1" placeholder="0"></div>
+          <div class="field"><label>Status</label><select id="status"><option>Comprado</option><option>Na suíte</option><option>Consolidado</option><option>Recebido BR</option></select></div>
+          <div class="field"><label>Venda prevista</label><input id="vendaPrevista" type="number" min="0" step="0.01" placeholder="0,00"></div>
+          <div class="field"><label>Plataforma</label><select id="plataforma"><option value="">Não definida</option><option>Shopee</option><option>Mercado Livre</option><option>OLX</option><option>Outro</option></select></div>
+          <div class="field"><label>Taxa (%)</label><input id="taxaPct" type="number" min="0" step="0.01" value="0"></div>
+          <div class="field"><label>Taxa fixa</label><input id="taxaFixa" type="number" min="0" step="0.01" value="0"></div>
+          <div class="field"><label>Produto pago?</label><select id="itemPago"><option value="1">Sim</option><option value="0">Não</option></select></div>
+          <div class="field"><label>&nbsp;</label><button class="btn btn-primary" onclick="adicionarItem()">Adicionar produto</button></div>
+        </div>
+        <div class="helper">Para JPY/USD, informe a cotação em reais por 1 unidade da moeda. Ex.: se ¥1 = R$ 0,035, use 0,035.</div>
+      </div>
     </div>
-    <div class="helper">O peso pode ficar em branco e ser preenchido depois. Digite o peso em gramas (ex.: 2000 = 2,00 kg). Cada produto pode ser vinculado a uma remessa na tabela.</div>
-    <div id="pesoAlert"></div>
-    <div class="filter-row">
-      <span class="filter-label">Mostrar:</span>
-      <select id="filtroRemessa" onchange="renderItens()">
-        <option value="todos">Todos</option>
-        <option value="sem">Sem remessa</option>
-      </select>
+
+    <div class="section">
+      <div class="section-header">Produtos</div>
+      <div class="filters">
+        <input id="buscaProduto" type="search" placeholder="Buscar produto…" oninput="renderItens()">
+        <select id="filtroStatus" onchange="renderItens()"><option value="todos">Todos os status</option><option>Comprado</option><option>Na suíte</option><option>Consolidado</option><option>Recebido BR</option></select>
+        <select id="filtroRemessa" onchange="renderItens()"><option value="todos">Todas as remessas</option><option value="sem">Sem remessa</option></select>
+        <select id="filtroPeso" onchange="renderItens()"><option value="todos">Com/sem peso</option><option value="sem">Sem peso</option><option value="com">Com peso</option></select>
+        <select id="filtroLucro" onchange="renderItens()"><option value="todos">Todos os resultados</option><option value="lucro">Com lucro</option><option value="prejuizo">Com prejuízo</option><option value="semvenda">Sem venda prevista</option></select>
+        <select id="ordenarProdutos" onchange="renderItens()"><option value="recente">Ordem cadastrada</option><option value="custo_desc">Maior custo</option><option value="lucro_desc">Maior lucro</option><option value="lucro_asc">Maior prejuízo</option><option value="peso_desc">Maior peso</option></select>
+      </div>
+      <div id="itensContainer"></div>
     </div>
-    <div id="itensContainer"></div>
-  </div>
   </section>
 
   <section class="tab-panel" data-tab-panel="remessas">
-  <div class="section">
-    <div class="section-header">Fretes consolidados</div>
-    <div class="form small">
-      <input id="freteNome" placeholder="Ex.: Frete 1 — primeira consolidação">
-      <input id="freteValor" type="number" min="0" step="0.01" placeholder="Valor do frete (R$)">
-      <select id="freteRateio">
-        <option value="peso">Ratear por peso</option>
-        <option value="igual">Dividir igualmente</option>
-        <option value="valor">Ratear pelo valor dos itens</option>
-      </select>
-      <button class="btn-primary" onclick="adicionarFrete()">Salvar frete</button>
+    <div class="section">
+      <div class="section-header">Nova remessa / frete consolidado</div>
+      <div class="section-body">
+        <div class="form-grid">
+          <div class="field w4"><label>Nome</label><input id="freteNome" placeholder="Ex.: Novembro 01"></div>
+          <div class="field"><label>Frete (R$)</label><input id="freteValor" type="number" min="0" step="0.01"></div>
+          <div class="field"><label>Rateio</label><select id="freteRateio"><option value="peso">Por peso</option><option value="igual">Igual</option><option value="valor">Por valor</option></select></div>
+          <div class="field"><label>Status</label><select id="freteStatus"><option>Montando</option><option>Enviado</option><option>Alfândega</option><option>Recebido</option></select></div>
+          <div class="field"><label>Frete pago?</label><select id="fretePago"><option value="1">Sim</option><option value="0">Não</option></select></div>
+          <div class="field"><label>&nbsp;</label><button class="btn btn-primary" onclick="adicionarFrete()">Criar remessa</button></div>
+        </div>
+      </div>
     </div>
-    <div class="helper">
-      Salve o Frete 1 agora e depois crie o Frete 2, Frete 3 etc. Cada frete fica guardado separadamente e pode usar um rateio diferente.
-    </div>
-    <div id="fretesContainer"></div>
-  </div>
 
-  <div class="section">
-    <div class="section-header">Impostos no Brasil</div>
-    <div class="form small">
-      <select id="impostoFrete"></select>
-      <input id="impostoValor" type="number" min="0" step="0.01" placeholder="Imposto desta remessa (R$)">
-      <select id="impostoRateio">
-        <option value="peso">Ratear por peso</option>
-        <option value="igual">Dividir igualmente</option>
-        <option value="valor">Ratear pelo valor dos itens</option>
-      </select>
-      <button class="btn-secondary" onclick="salvarImposto()">Adicionar imposto</button>
+    <div class="section">
+      <div class="section-header">Remessas</div>
+      <div class="section-body"><div id="fretesContainer" class="remessa-list"></div></div>
     </div>
-    <div class="helper">Escolha a qual frete/remessa o imposto pertence. O valor será rateado somente entre os itens daquela remessa.</div>
-    <div id="impostosContainer"></div>
-  </div>
+
+    <div class="section">
+      <div class="section-header">Adicionar imposto</div>
+      <div class="section-body">
+        <div class="form-grid">
+          <div class="field w4"><label>Remessa</label><select id="impostoFrete"></select></div>
+          <div class="field"><label>Imposto (R$)</label><input id="impostoValor" type="number" min="0" step="0.01"></div>
+          <div class="field"><label>Rateio</label><select id="impostoRateio"><option value="peso">Por peso</option><option value="igual">Igual</option><option value="valor">Por valor</option></select></div>
+          <div class="field"><label>Imposto pago?</label><select id="impostoPago"><option value="0">Não</option><option value="1">Sim</option></select></div>
+          <div class="field"><label>&nbsp;</label><button class="btn btn-secondary" onclick="salvarImposto()">Adicionar imposto</button></div>
+        </div>
+      </div>
+      <div id="impostosContainer"></div>
+    </div>
   </section>
 
   <section class="tab-panel" data-tab-panel="custos">
-  <div class="section">
-    <div class="section-header">Custo por item</div>
-    <div id="custoContainer"></div>
-    <div class="note">Custo final do item = preço pago + parte dos fretes da(s) remessa(s) + parte dos impostos.</div>
-  </div>
+    <div class="section">
+      <div class="section-header">Custo, venda e lucro por item</div>
+      <div id="custoContainer"></div>
+    </div>
+  </section>
+
+  <section class="tab-panel" data-tab-panel="historico">
+    <div class="section">
+      <div class="section-header">Histórico de alterações <button class="btn btn-secondary btn-small" onclick="carregarHistorico()">Atualizar</button></div>
+      <div class="section-body"><div id="historicoContainer" class="timeline"><div class="empty">Abra esta aba para carregar o histórico.</div></div></div>
+    </div>
   </section>
 
   <section class="tab-panel" data-tab-panel="backup">
-  <div class="section">
-    <div class="section-header">Backup</div>
-    <div class="form small">
-      <button class="btn-secondary" onclick="exportarBackup()">Exportar backup</button>
-      <label style="display:flex;align-items:center;min-height:42px;border:1px solid #d1d5db;border-radius:9px;padding:0 11px;font-size:14px;cursor:pointer;">
-        Importar backup
-        <input id="importFile" type="file" accept=".json,application/json" onchange="importarBackup(event)" style="display:none">
-      </label>
-      <div class="helper" style="padding:12px 0 0;margin:0;">Salve uma cópia dos seus dados antes de trocar de computador ou navegador.</div>
+    <div class="section">
+      <div class="section-header">Backup manual</div>
+      <div class="section-body">
+        <div class="toolbar">
+          <button class="btn btn-secondary" onclick="exportarBackup()">Exportar JSON</button>
+          <label class="btn btn-secondary" style="display:inline-flex;align-items:center">
+            Importar JSON
+            <input id="importFile" type="file" accept=".json,application/json" onchange="importarBackup(event)" style="display:none">
+          </label>
+          <button class="btn btn-secondary" onclick="carregarBackups()">Atualizar lista automática</button>
+        </div>
+        <div class="helper">Backups automáticos são mantidos no D1 durante alterações e antes de importações/restaurações. Os 30 mais recentes ficam disponíveis abaixo.</div>
+      </div>
     </div>
-  </div>
+    <div class="section">
+      <div class="section-header">Backups automáticos</div>
+      <div class="section-body"><div id="backupsContainer" class="backup-list"><div class="empty">Abra esta aba para carregar os backups.</div></div></div>
+    </div>
   </section>
 </div>
-
-
 
 <script src="/app.js"></script>
 </body>
