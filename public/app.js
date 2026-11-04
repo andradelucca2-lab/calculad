@@ -8,6 +8,7 @@ const timers = new Map();
 const abertos = { produtos: new Set(), fretes: new Set(), custos: new Set() };
 let gruposInicializados = false;
 let ultimaExclusao = null;
+let abaAtual = sessionStorage.getItem('controle_aba_atual') || 'resumo';
 
 function num(v) {
   const n = parseFloat(v);
@@ -180,6 +181,65 @@ function nomeRateio(rateio) {
 
 function listaRecente() {
   return [...dados.fretes].reverse();
+}
+
+function trocarAba(nome) {
+  const permitidas = new Set(['resumo', 'produtos', 'remessas', 'custos', 'backup']);
+  if (!permitidas.has(nome)) nome = 'resumo';
+
+  abaAtual = nome;
+  sessionStorage.setItem('controle_aba_atual', nome);
+
+  document.querySelectorAll('.tab-btn').forEach(btn => {
+    const ativa = btn.dataset.tab === nome;
+    btn.classList.toggle('active', ativa);
+    btn.setAttribute('aria-selected', ativa ? 'true' : 'false');
+  });
+
+  document.querySelectorAll('.tab-panel').forEach(panel => {
+    panel.classList.toggle('active', panel.dataset.tabPanel === nome);
+  });
+
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function renderContadoresAbas() {
+  const produtos = document.getElementById('tabCountProdutos');
+  const remessas = document.getElementById('tabCountRemessas');
+  if (produtos) produtos.textContent = String(dados.itens.length);
+  if (remessas) remessas.textContent = String(dados.fretes.length);
+}
+
+function renderResumoRemessas() {
+  const box = document.getElementById('resumoRemessas');
+  if (!box) return;
+
+  if (!dados.fretes.length) {
+    box.innerHTML = '<div class="empty">Nenhuma remessa criada ainda.</div>';
+    return;
+  }
+
+  let html = '<div class="summary-remessas">';
+
+  listaRecente().forEach(frete => {
+    const grupo = dados.itens.filter(item => String(item.freteId) === String(frete.id));
+    const totalImpostos = dados.impostos
+      .filter(imposto => String(imposto.freteId) === String(frete.id))
+      .reduce((soma, imposto) => soma + num(imposto.valor), 0);
+    const custoGrupo = grupo.reduce((soma, item) => soma + custo(item), 0);
+
+    html += `<div class="summary-remessa">
+      <div class="summary-name">
+        <strong>${esc(frete.nome)}</strong>
+        <span class="muted">${grupo.length} produto(s) · ${pesoTotal(grupo).toFixed(2).replace('.', ',')} kg</span>
+      </div>
+      <div class="summary-metric">Frete<b>${moeda.format(frete.valor)}</b></div>
+      <div class="summary-metric">Impostos<b>${moeda.format(totalImpostos)}</b></div>
+      <div class="summary-metric">Custo da remessa<b>${moeda.format(custoGrupo)}</b></div>
+    </div>`;
+  });
+
+  box.innerHTML = html + '</div>';
 }
 
 /* Aparência e controles */
@@ -1154,6 +1214,8 @@ function renderResumo() {
   document.getElementById('totalImpostos').textContent = moeda.format(impostos);
   document.getElementById('jaPago').textContent = moeda.format(totalItens + totalFretes);
   document.getElementById('custoFinal').textContent = moeda.format(totalItens + totalFretes + impostos);
+  renderResumoRemessas();
+  renderContadoresAbas();
 }
 
 function render() {
@@ -1166,6 +1228,7 @@ function render() {
   renderCustos();
   renderResumo();
   garantirBarraDesfazer();
+  trocarAba(abaAtual);
 }
 
 /* Backup */
@@ -1218,6 +1281,7 @@ document.addEventListener('DOMContentLoaded', () => {
   prepararEstilos();
   prepararFiltros();
   garantirBarraDesfazer();
+  trocarAba(abaAtual);
 
   if (appKey) entrar();
   else document.getElementById('appPassword')?.focus();

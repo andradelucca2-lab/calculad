@@ -35,9 +35,26 @@ td input,td select{min-height:36px;padding:6px 8px}
 .kpi{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;padding:14px 16px}
 .kpi div{background:#f8fafc;border-radius:10px;padding:11px}
 .kpi strong{display:block;font-size:16px;margin-top:3px}
+.tabs{position:sticky;top:0;z-index:30;display:flex;gap:8px;overflow-x:auto;padding:10px 0 14px;margin-bottom:14px;background:#f5f6f8;scrollbar-width:thin}
+.tab-btn{width:auto;min-width:max-content;display:flex;align-items:center;gap:7px;border:1px solid #d1d5db;background:#fff;color:#4b5563;padding:9px 13px;border-radius:10px}
+.tab-btn:hover{background:#f8fafc}
+.tab-btn.active{background:#111827;color:#fff;border-color:#111827}
+.tab-count{display:inline-flex;align-items:center;justify-content:center;min-width:22px;height:22px;padding:0 6px;border-radius:999px;background:#eef0f3;color:#4b5563;font-size:11px}
+.tab-btn.active .tab-count{background:#374151;color:#fff}
+.tab-panel{display:none}
+.tab-panel.active{display:block}
+.summary-section .section-header{display:flex;align-items:center;justify-content:space-between}
+.summary-remessas{padding:14px 16px;display:grid;gap:10px}
+.summary-remessa{display:grid;grid-template-columns:minmax(180px,1fr) repeat(3,minmax(105px,auto));gap:12px;align-items:center;border:1px solid #e5e7eb;border-radius:11px;padding:12px 13px}
+.summary-remessa strong{display:block}
+.summary-remessa .summary-metric{font-size:12px;color:#6b7280}
+.summary-remessa .summary-metric b{display:block;color:#1f2937;font-size:14px;margin-top:2px}
+.summary-actions{padding:0 16px 16px;display:flex;justify-content:flex-end}
+.summary-actions button{width:auto}
 @media(max-width:1000px){.grid{grid-template-columns:repeat(3,1fr)}}
 @media(max-width:850px){.grid{grid-template-columns:repeat(2,1fr)}.form,.form.small{grid-template-columns:1fr 1fr}.form button,.form.small button{grid-column:1/-1}}
-@media(max-width:500px){.grid{grid-template-columns:1fr}.form,.form.small{grid-template-columns:1fr}}
+@media(max-width:700px){.summary-remessa{grid-template-columns:1fr 1fr}.summary-remessa .summary-name{grid-column:1/-1}}
+@media(max-width:500px){.grid{grid-template-columns:1fr}.form,.form.small{grid-template-columns:1fr}.tabs{margin-left:-4px;margin-right:-4px}.summary-remessa{grid-template-columns:1fr}}
 </style>
 </head>
 <body>
@@ -57,6 +74,15 @@ td input,td select{min-height:36px;padding:6px 8px}
   <h1>Controle de Compras e Fretes</h1>
   <div class="subtitle">Cadastre os produtos em BRL, coloque o peso quando chegarem e organize vários fretes consolidados.</div>
 
+  <nav class="tabs" role="tablist" aria-label="Navegação principal">
+    <button type="button" class="tab-btn active" data-tab="resumo" onclick="trocarAba('resumo')" role="tab">📊 Resumo</button>
+    <button type="button" class="tab-btn" data-tab="produtos" onclick="trocarAba('produtos')" role="tab">📦 Produtos <span class="tab-count" id="tabCountProdutos">0</span></button>
+    <button type="button" class="tab-btn" data-tab="remessas" onclick="trocarAba('remessas')" role="tab">🚚 Remessas <span class="tab-count" id="tabCountRemessas">0</span></button>
+    <button type="button" class="tab-btn" data-tab="custos" onclick="trocarAba('custos')" role="tab">💰 Custos</button>
+    <button type="button" class="tab-btn" data-tab="backup" onclick="trocarAba('backup')" role="tab">⚙️ Backup</button>
+  </nav>
+
+  <section class="tab-panel active" data-tab-panel="resumo">
   <div class="grid">
     <div class="card"><div class="label">Total dos itens</div><div class="value" id="totalItens">R$ 0,00</div></div>
     <div class="card"><div class="label">Total dos fretes</div><div class="value" id="totalFretes">R$ 0,00</div></div>
@@ -65,8 +91,18 @@ td input,td select{min-height:36px;padding:6px 8px}
     <div class="card"><div class="label">Custo final</div><div class="value" id="custoFinal">R$ 0,00</div></div>
   </div>
 
+  <div class="section summary-section">
+    <div class="section-header">Visão geral das remessas</div>
+    <div id="resumoRemessas"></div>
+    <div class="summary-actions">
+      <button type="button" class="btn-secondary" onclick="trocarAba('remessas')">Ver todas as remessas</button>
+    </div>
+  </div>
+  </section>
+
+  <section class="tab-panel" data-tab-panel="produtos">
   <div class="section">
-    <div class="section-header">1. Produtos</div>
+    <div class="section-header">Produtos</div>
     <div class="form">
       <input id="item" placeholder="Ex.: Controle PS3">
       <input id="preco" type="number" min="0" step="0.01" placeholder="Preço pago (R$)">
@@ -87,9 +123,11 @@ td input,td select{min-height:36px;padding:6px 8px}
     </div>
     <div id="itensContainer"></div>
   </div>
+  </section>
 
+  <section class="tab-panel" data-tab-panel="remessas">
   <div class="section">
-    <div class="section-header">2. Fretes consolidados</div>
+    <div class="section-header">Fretes consolidados</div>
     <div class="form small">
       <input id="freteNome" placeholder="Ex.: Frete 1 — primeira consolidação">
       <input id="freteValor" type="number" min="0" step="0.01" placeholder="Valor do frete (R$)">
@@ -107,7 +145,7 @@ td input,td select{min-height:36px;padding:6px 8px}
   </div>
 
   <div class="section">
-    <div class="section-header">3. Impostos no Brasil</div>
+    <div class="section-header">Impostos no Brasil</div>
     <div class="form small">
       <select id="impostoFrete"></select>
       <input id="impostoValor" type="number" min="0" step="0.01" placeholder="Imposto desta remessa (R$)">
@@ -121,15 +159,19 @@ td input,td select{min-height:36px;padding:6px 8px}
     <div class="helper">Escolha a qual frete/remessa o imposto pertence. O valor será rateado somente entre os itens daquela remessa.</div>
     <div id="impostosContainer"></div>
   </div>
+  </section>
 
+  <section class="tab-panel" data-tab-panel="custos">
   <div class="section">
-    <div class="section-header">4. Custo por item</div>
+    <div class="section-header">Custo por item</div>
     <div id="custoContainer"></div>
     <div class="note">Custo final do item = preço pago + parte dos fretes da(s) remessa(s) + parte dos impostos.</div>
   </div>
+  </section>
 
+  <section class="tab-panel" data-tab-panel="backup">
   <div class="section">
-    <div class="section-header">5. Backup</div>
+    <div class="section-header">Backup</div>
     <div class="form small">
       <button class="btn-secondary" onclick="exportarBackup()">Exportar backup</button>
       <label style="display:flex;align-items:center;min-height:42px;border:1px solid #d1d5db;border-radius:9px;padding:0 11px;font-size:14px;cursor:pointer;">
@@ -139,6 +181,7 @@ td input,td select{min-height:36px;padding:6px 8px}
       <div class="helper" style="padding:12px 0 0;margin:0;">Salve uma cópia dos seus dados antes de trocar de computador ou navegador.</div>
     </div>
   </div>
+  </section>
 </div>
 
 
