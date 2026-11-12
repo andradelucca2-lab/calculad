@@ -51,7 +51,8 @@ function normalize(source) {
       preco: num(item.preco),
       peso: num(item.peso),
       status: item.status || 'Comprado',
-      freteId: item.freteId ? String(item.freteId) : ''
+      freteId: item.freteId ? String(item.freteId) : '',
+      proxy: item.proxy || ''
     })),
     fretes: (source.fretes || []).map(frete => ({
       id: String(frete.id || crypto.randomUUID()),
@@ -424,7 +425,8 @@ async function adicionarItem() {
     preco: num(document.getElementById('preco').value),
     peso: num(document.getElementById('peso').value) / 1000,
     status: document.getElementById('status').value,
-    freteId: ''
+    freteId: '',
+    proxy: document.getElementById('proxy').value
   };
 
   setStatus('Salvando…');
@@ -440,6 +442,7 @@ async function adicionarItem() {
       document.getElementById(id).value = '';
     });
     document.getElementById('status').value = 'Comprado';
+    document.getElementById('proxy').value = '';
 
     render();
     setStatus('Salvo na nuvem');
@@ -528,7 +531,7 @@ function renderItens() {
   }
 
   let html = '<div class="table-wrap"><table><thead><tr>' +
-    '<th>Item</th><th>Preço</th><th>Peso (g)</th><th>Status</th>' +
+    '<th>Item</th><th>Preço</th><th>Proxy</th><th>Peso (g)</th><th>Status</th>' +
     '<th>Frete</th><th>Custo final</th><th>Ação</th>' +
     '</tr></thead><tbody>';
 
@@ -545,6 +548,20 @@ function renderItens() {
         value="${item.preco || ''}"
         aria-label="Preço em reais"
         oninput="editarItem(${i},'preco',this.value)"></td>
+
+      <td><select aria-label="Proxy de compra"
+        onchange="editarItem(${i},'proxy',this.value)">
+        ${[
+          ['', 'Não informado'],
+          ['Treasure', 'Treasure'],
+          ['KuroGeek', 'KuroGeek'],
+          ['Neko', 'Neko'],
+          ['Buyee', 'Buyee'],
+          ['Outro', 'Outro']
+        ].map(([valor, nome]) =>
+          `<option value="${valor}" ${item.proxy === valor ? 'selected' : ''}>${nome}</option>`
+        ).join('')}
+      </select></td>
 
       <td><input type="number" min="0" step="1"
         value="${item.peso ? Math.round(item.peso * 1000) : ''}"
