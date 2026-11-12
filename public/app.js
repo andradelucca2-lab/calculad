@@ -52,7 +52,11 @@ function normalize(source) {
       peso: num(item.peso),
       status: item.status || 'Comprado',
       freteId: item.freteId ? String(item.freteId) : '',
-      proxy: item.proxy || ''
+      proxy: item.proxy || '',
+      vendido: !!item.vendido,
+      valorVenda: num(item.valorVenda),
+      custoVenda: num(item.custoVenda),
+      vendidoEm: item.vendidoEm || ''
     })),
     fretes: (source.fretes || []).map(frete => ({
       id: String(frete.id || crypto.randomUUID()),
@@ -185,7 +189,7 @@ function listaRecente() {
 }
 
 function trocarAbaPrincipal(nome) {
-  const permitidas = ['1', '2', '3', '4'];
+  const permitidas = ['1', 'vendidos', '2', '3', '4'];
   if (!permitidas.includes(String(nome))) nome = '1';
 
   abaPrincipal = String(nome);
@@ -426,7 +430,11 @@ async function adicionarItem() {
     peso: num(document.getElementById('peso').value) / 1000,
     status: document.getElementById('status').value,
     freteId: '',
-    proxy: document.getElementById('proxy').value
+    proxy: document.getElementById('proxy').value,
+    vendido: false,
+    valorVenda: 0,
+    custoVenda: 0,
+    vendidoEm: ''
   };
 
   setStatus('Salvando…');
@@ -523,7 +531,7 @@ function renderItens() {
     return;
   }
 
-  const lista = dados.itens.filter(filtroAtivo);
+  const lista = dados.itens.filter(item => !item.vendido && filtroAtivo(item));
 
   if (!lista.length) {
     box.innerHTML = '<div class="empty">Nenhum produto corresponde à busca ou aos filtros.</div>';
@@ -584,9 +592,160 @@ function renderItens() {
 
       <td class="cost-final">${moeda.format(custo(item))}</td>
 
-      <td><button type="button" class="btn-danger"
-        onclick="excluirItem(${i})">Excluir produto</button></td>
+      <td><div class="actions">
+        <button type="button" class="btn-success"
+          onclick="marcarVendido(${i})">Vendido</button>
+        <button type="button" class="btn-danger"
+          onclick="excluirItem(${i})">Excluir</button>
+      </div></td>
     </tr>`;
+  });
+
+  box.innerHTML = html + '</tbody></table></div>';
+}
+
+
+function valorDigitado(v) {
+  return num(String(v ?? '').replace(',', '.'));
+}
+
+async function marcarVendido(i) {
+  const item = dados.itens[i];
+  if (!item || item.vendido) return;
+
+  const resposta = prompt(
+    'Por quanto você vendeu "' + item.item + '"?\n\nDigite o valor em reais:',
+    ''
+  );
+
+  if (resposta === null) return;
+
+  const valor = valorDigitado(resposta);
+  if (valor <= 0) {
+    alert('Informe um valor de venda maior que zero.');
+    return;
+  }
+
+  const anterior = { ...item };
+  item.vendido = true;
+  item.valorVenda = valor;
+  item.custoVenda = custo(item);
+  item.vendidoEm = new Date().toISOString();
+
+  setStatus('Salvando venda…');
+
+  try {
+    await apiFetch('/items/' + encodeURIComponent(item.id), {
+      method: 'PUT',
+      body: JSON.stringify(remoteItem(item))
+    });
+
+    render();
+    setStatus('Venda salva');
+  } catch {
+    Object.assign(item, anterior);
+    render();
+    setStatus('Falha ao salvar venda', false);
+  }
+}
+
+function editarValorVenda(i, valor) {
+  const item = dados.itens[i];
+  if (!item || !item.vendido) return;
+
+  item.valorVenda = valorDigitado(valor);
+
+  schedule('item-' + item.id, () =>
+    apiFetch('/items/' + encodeURIComponent(item.id), {
+      method: 'PUT',
+      body: JSON.stringify(remoteItem(item))
+    })
+  );
+
+  renderVendidos();
+}
+
+async function voltarAoEstoque(i) {
+  const item = dados.itens[i];
+  if (!item || !item.vendido) return;
+
+  if (!confirm('Voltar "' + item.item + '" para a aba Produtos?')) return;
+
+  const anterior = { ...item };
+  item.vendido = false;
+  item.valorVenda = 0;
+  item.custoVenda = 0;
+  item.vendidoEm = '';
+
+  setStatus('Voltando ao estoque…');
+
+  try {
+    await apiFetch('/items/' + encodeURIComponent(item.id), {
+      method: 'PUT',
+      body: JSON.stringify(remoteItem(item))
+    });
+
+    render();
+    setStatus('Produto voltou ao estoque');
+  } catch {
+    Object.assign(item, anterior);
+    render();
+    setStatus('Falha ao voltar produto', false);
+  }
+}
+
+function dataVenda(valor) {
+  if (!valor) return '—';
+  const data = new Date(valor);
+  return Number.isNaN(data.getTime())
+    ? String(valor)
+    : data.toLocaleDateString('pt-BR');
+}
+
+function renderVendidos() {
+  const box = document.getElementById('vendidosContainer');
+  const resumo = document.getElementById('vendidosResumo');
+  if (!box || !resumo) return;
+
+  const vendidos = dados.itens.filter(item => item.vendido);
+  const totalVenda = vendidos.reduce((soma, item) => soma + num(item.valorVenda), 0);
+  const totalCusto = vendidos.reduce((soma, item) =>
+    soma + (num(item.custoVenda) || custo(item)), 0
+  );
+  const totalLucro = totalVenda - totalCusto;
+
+  resumo.innerHTML =
+    '<div><span class="muted">Produtos vendidos</span><strong>' + vendidos.length + '</strong></div>' +
+    '<div><span class="muted">Total vendido</span><strong>' + moeda.format(totalVenda) + '</strong></div>' +
+    '<div><span class="muted">Lucro total</span><strong style="color:' +
+      (totalLucro >= 0 ? '#166534' : '#991b1b') + '">' + moeda.format(totalLucro) + '</strong></div>';
+
+  if (!vendidos.length) {
+    box.innerHTML = '<div class="empty">Nenhum produto vendido ainda.</div>';
+    return;
+  }
+
+  let html = '<div class="table-wrap"><table><thead><tr>' +
+    '<th>Item</th><th>Proxy</th><th>Custo final</th><th>Vendido por</th>' +
+    '<th>Lucro</th><th>Data</th><th>Ação</th>' +
+    '</tr></thead><tbody>';
+
+  [...vendidos].reverse().forEach(item => {
+    const i = dados.itens.indexOf(item);
+    const custoHistorico = num(item.custoVenda) || custo(item);
+    const lucroVenda = num(item.valorVenda) - custoHistorico;
+
+    html += '<tr>' +
+      '<td><strong>' + esc(item.item) + '</strong></td>' +
+      '<td>' + esc(item.proxy || 'Não informado') + '</td>' +
+      '<td>' + moeda.format(custoHistorico) + '</td>' +
+      '<td><input type="number" min="0" step="0.01" value="' + (num(item.valorVenda) || '') +
+        '" aria-label="Valor da venda" onchange="editarValorVenda(' + i + ',this.value)"></td>' +
+      '<td style="font-weight:700;color:' + (lucroVenda >= 0 ? '#166534' : '#991b1b') + '">' +
+        moeda.format(lucroVenda) + '</td>' +
+      '<td>' + esc(dataVenda(item.vendidoEm)) + '</td>' +
+      '<td><button type="button" class="btn-secondary" onclick="voltarAoEstoque(' + i + ')">Voltar ao estoque</button></td>' +
+    '</tr>';
   });
 
   box.innerHTML = html + '</tbody></table></div>';
@@ -1204,6 +1363,7 @@ function render() {
   prepararFiltros();
   iniciarGrupos();
   renderItens();
+  renderVendidos();
   renderFretes();
   renderImpostos();
   renderCustos();
