@@ -3,6 +3,7 @@ export interface Env {
   DB: D1Database;
   ASSETS: Fetcher;
   APP_KEY: string;
+  PREVIEW_MODE?: string;
 }
 
 const HEADERS = {
@@ -17,6 +18,8 @@ function json(data: unknown, status = 200) {
 }
 
 function autorizado(request: Request, env: Env) {
+  if (env.PREVIEW_MODE === "true") return true;
+
   return (
     !!env.APP_KEY &&
     request.headers.get("X-App-Key") === env.APP_KEY
@@ -83,6 +86,20 @@ async function api(request: Request, env: Env) {
 
   const recurso = partes[1];
   const id = partes[2];
+
+  if (env.PREVIEW_MODE === "true") {
+    if (request.method === "GET" && recurso === "data") {
+      return json({ itens: [], fretes: [], impostos: [] });
+    }
+
+    if (request.method === "DELETE") {
+      return new Response(null, { status: 204 });
+    }
+
+    if (request.method === "POST" || request.method === "PUT") {
+      return json({ ok: true });
+    }
+  }
 
   if (request.method === "GET" && recurso === "data") {
     return json(await carregarDados(env));

@@ -35,9 +35,15 @@ td input,td select{min-height:36px;padding:6px 8px}
 .kpi{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;padding:14px 16px}
 .kpi div{background:#f8fafc;border-radius:10px;padding:11px}
 .kpi strong{display:block;font-size:16px;margin-top:3px}
+.main-tabs{display:flex;gap:8px;overflow-x:auto;margin:0 0 16px;padding:2px 0;scrollbar-width:thin}
+.main-tab{width:auto;min-width:max-content;min-height:42px;padding:9px 14px;border:1px solid #d1d5db;background:#fff;color:#4b5563;border-radius:10px;font-weight:700}
+.main-tab:hover{background:#f8fafc}
+.main-tab.active{background:#111827;color:#fff;border-color:#111827}
+.main-tab-panel{display:none}
+.main-tab-panel.active{display:block}
 @media(max-width:1000px){.grid{grid-template-columns:repeat(3,1fr)}}
 @media(max-width:850px){.grid{grid-template-columns:repeat(2,1fr)}.form,.form.small{grid-template-columns:1fr 1fr}.form button,.form.small button{grid-column:1/-1}}
-@media(max-width:500px){.grid{grid-template-columns:1fr}.form,.form.small{grid-template-columns:1fr}}
+@media(max-width:500px){.grid{grid-template-columns:1fr}.form,.form.small{grid-template-columns:1fr}.main-tabs{margin-left:-2px;margin-right:-2px}.main-tab{padding:9px 12px}}
 </style>
 </head>
 <body>
@@ -65,7 +71,14 @@ td input,td select{min-height:36px;padding:6px 8px}
     <div class="card"><div class="label">Custo final</div><div class="value" id="custoFinal">R$ 0,00</div></div>
   </div>
 
-  <div class="section">
+  <div class="main-tabs" role="tablist" aria-label="Seções principais">
+    <button type="button" class="main-tab active" data-main-tab="1" onclick="trocarAbaPrincipal('1')">1. Produtos</button>
+    <button type="button" class="main-tab" data-main-tab="2" onclick="trocarAbaPrincipal('2')">2. Fretes</button>
+    <button type="button" class="main-tab" data-main-tab="3" onclick="trocarAbaPrincipal('3')">3. Impostos</button>
+    <button type="button" class="main-tab" data-main-tab="4" onclick="trocarAbaPrincipal('4')">4. Custo por item</button>
+  </div>
+
+  <div class="section main-tab-panel active" data-main-panel="1">
     <div class="section-header">1. Produtos</div>
     <div class="form">
       <input id="item" placeholder="Ex.: Controle PS3">
@@ -88,7 +101,7 @@ td input,td select{min-height:36px;padding:6px 8px}
     <div id="itensContainer"></div>
   </div>
 
-  <div class="section">
+  <div class="section main-tab-panel" data-main-panel="2">
     <div class="section-header">2. Fretes consolidados</div>
     <div class="form small">
       <input id="freteNome" placeholder="Ex.: Frete 1 — primeira consolidação">
@@ -106,7 +119,7 @@ td input,td select{min-height:36px;padding:6px 8px}
     <div id="fretesContainer"></div>
   </div>
 
-  <div class="section">
+  <div class="section main-tab-panel" data-main-panel="3">
     <div class="section-header">3. Impostos no Brasil</div>
     <div class="form small">
       <select id="impostoFrete"></select>
@@ -122,7 +135,7 @@ td input,td select{min-height:36px;padding:6px 8px}
     <div id="impostosContainer"></div>
   </div>
 
-  <div class="section">
+  <div class="section main-tab-panel" data-main-panel="4">
     <div class="section-header">4. Custo por item</div>
     <div id="custoContainer"></div>
     <div class="note">Custo final do item = preço pago + parte dos fretes da(s) remessa(s) + parte dos impostos.</div>

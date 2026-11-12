@@ -3,6 +3,7 @@
 const moeda = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' });
 const API = '/api';
 let appKey = sessionStorage.getItem('controle_app_key') || '';
+let abaPrincipal = sessionStorage.getItem('controle_aba_principal') || '1';
 let dados = { itens: [], fretes: [], impostos: [] };
 const timers = new Map();
 const abertos = { produtos: new Set(), fretes: new Set(), custos: new Set() };
@@ -180,6 +181,24 @@ function nomeRateio(rateio) {
 
 function listaRecente() {
   return [...dados.fretes].reverse();
+}
+
+function trocarAbaPrincipal(nome) {
+  const permitidas = ['1', '2', '3', '4'];
+  if (!permitidas.includes(String(nome))) nome = '1';
+
+  abaPrincipal = String(nome);
+  sessionStorage.setItem('controle_aba_principal', abaPrincipal);
+
+  document.querySelectorAll('.main-tab').forEach(botao => {
+    const ativa = botao.dataset.mainTab === abaPrincipal;
+    botao.classList.toggle('active', ativa);
+    botao.setAttribute('aria-selected', ativa ? 'true' : 'false');
+  });
+
+  document.querySelectorAll('.main-tab-panel').forEach(painel => {
+    painel.classList.toggle('active', painel.dataset.mainPanel === abaPrincipal);
+  });
 }
 
 /* Aparência e controles */
@@ -1166,6 +1185,7 @@ function render() {
   renderCustos();
   renderResumo();
   garantirBarraDesfazer();
+  trocarAbaPrincipal(abaPrincipal);
 }
 
 /* Backup */
@@ -1218,6 +1238,7 @@ document.addEventListener('DOMContentLoaded', () => {
   prepararEstilos();
   prepararFiltros();
   garantirBarraDesfazer();
+  trocarAbaPrincipal(abaPrincipal);
 
   if (appKey) entrar();
   else document.getElementById('appPassword')?.focus();
