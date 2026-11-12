@@ -37,7 +37,7 @@ async function lerJson(request: Request): Promise<any> {
 async function carregarDados(env: Env) {
   const [itens, fretes, impostos] = await Promise.all([
     env.DB.prepare(
-      "SELECT id,item,preco,peso_g,status,frete_id,proxy,vendido,valor_venda,vendido_em FROM itens ORDER BY rowid"
+      "SELECT id,item,preco,peso_g,status,frete_id,proxy,vendido,valor_venda,custo_venda,vendido_em FROM itens ORDER BY rowid"
     ).all(),
 
     env.DB.prepare(
@@ -60,6 +60,7 @@ async function carregarDados(env: Env) {
       proxy: x.proxy || "",
       vendido: Number(x.vendido) === 1,
       valorVenda: Number(x.valor_venda) || 0,
+      custoVenda: Number(x.custo_venda) || 0,
       vendidoEm: x.vendido_em || "",
     })),
 
@@ -117,8 +118,8 @@ async function api(request: Request, env: Env) {
 
     await env.DB.prepare(
       `INSERT INTO itens
-      (id,item,preco,peso_g,status,frete_id,proxy,vendido,valor_venda,vendido_em)
-      VALUES (?,?,?,?,?,?,?,?,?,?)`
+      (id,item,preco,peso_g,status,frete_id,proxy,vendido,valor_venda,custo_venda,vendido_em)
+      VALUES (?,?,?,?,?,?,?,?,?,?,?)`
     ).bind(
       String(x.id),
       String(x.item),
@@ -129,6 +130,7 @@ async function api(request: Request, env: Env) {
       String(x.proxy || ""),
       x.vendido ? 1 : 0,
       Number(x.valorVenda) || 0,
+      Number(x.custoVenda) || 0,
       x.vendidoEm ? String(x.vendidoEm) : null
     ).run();
 
@@ -140,7 +142,7 @@ async function api(request: Request, env: Env) {
 
     await env.DB.prepare(
       `UPDATE itens
-      SET item=?,preco=?,peso_g=?,status=?,frete_id=?,proxy=?,vendido=?,valor_venda=?,vendido_em=?
+      SET item=?,preco=?,peso_g=?,status=?,frete_id=?,proxy=?,vendido=?,valor_venda=?,custo_venda=?,vendido_em=?
       WHERE id=?`
     ).bind(
       String(x.item || ""),
@@ -151,6 +153,7 @@ async function api(request: Request, env: Env) {
       String(x.proxy || ""),
       x.vendido ? 1 : 0,
       Number(x.valorVenda) || 0,
+      Number(x.custoVenda) || 0,
       x.vendidoEm ? String(x.vendidoEm) : null,
       id
     ).run();
@@ -282,8 +285,8 @@ async function api(request: Request, env: Env) {
       ...x.itens.map((i: any) =>
         env.DB.prepare(
           `INSERT INTO itens
-          (id,item,preco,peso_g,status,frete_id,proxy,vendido,valor_venda,vendido_em)
-          VALUES (?,?,?,?,?,?,?,?,?,?)`
+          (id,item,preco,peso_g,status,frete_id,proxy,vendido,valor_venda,custo_venda,vendido_em)
+          VALUES (?,?,?,?,?,?,?,?,?,?,?)`
         ).bind(
           String(i.id),
           String(i.item || ""),
@@ -294,6 +297,7 @@ async function api(request: Request, env: Env) {
           String(i.proxy || ""),
           i.vendido ? 1 : 0,
           Number(i.valorVenda) || 0,
+          Number(i.custoVenda) || 0,
           i.vendidoEm ? String(i.vendidoEm) : null
         )
       ),
