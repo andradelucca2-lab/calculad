@@ -1,3 +1,4 @@
+
 {
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "calculad",
@@ -16,10 +17,5 @@
       "database_id": "6b6a5956-385e-4754-be23-7465a3dbd8dc",
       "migrations_dir": "migrations"
     }
-  ],
-  "previews": {
-    "vars": {
-      "PREVIEW_MODE": "true"
-    }
-  }
+  ]
 }
