@@ -1,0 +1,1 @@
+ALTER TABLE itens ADD COLUMN plataforma_venda TEXT NOT NULL DEFAULT '';
