@@ -73,10 +73,10 @@ td input,td select{min-height:36px;padding:6px 8px}
 
   <div class="main-tabs" role="tablist" aria-label="Seções principais">
     <button type="button" class="main-tab active" data-main-tab="1" onclick="trocarAbaPrincipal('1')">1. Produtos</button>
-    <button type="button" class="main-tab" data-main-tab="vendidos" onclick="trocarAbaPrincipal('vendidos')">✓ Vendidos</button>
     <button type="button" class="main-tab" data-main-tab="2" onclick="trocarAbaPrincipal('2')">2. Fretes</button>
     <button type="button" class="main-tab" data-main-tab="3" onclick="trocarAbaPrincipal('3')">3. Impostos</button>
     <button type="button" class="main-tab" data-main-tab="4" onclick="trocarAbaPrincipal('4')">4. Custo por item</button>
+    <button type="button" class="main-tab" data-main-tab="vendidos" onclick="trocarAbaPrincipal('vendidos')">✓ Vendidos</button>
   </div>
 
   <div class="section main-tab-panel active" data-main-panel="1">
@@ -108,13 +108,6 @@ td input,td select{min-height:36px;padding:6px 8px}
       </select>
     </div>
     <div id="itensContainer"></div>
-  </div>
-
-  <div class="section main-tab-panel" data-main-panel="vendidos">
-    <div class="section-header">Produtos vendidos</div>
-    <div id="vendidosResumo" class="kpi"></div>
-    <div class="helper">Os produtos marcados como vendidos saem da aba Produtos, mas continuam guardados aqui com o valor da venda e o lucro.</div>
-    <div id="vendidosContainer"></div>
   </div>
 
   <div class="section main-tab-panel" data-main-panel="2">
@@ -155,6 +148,13 @@ td input,td select{min-height:36px;padding:6px 8px}
     <div class="section-header">4. Custo por item</div>
     <div id="custoContainer"></div>
     <div class="note">Custo final do item = preço pago + parte dos fretes da(s) remessa(s) + parte dos impostos.</div>
+  </div>
+
+  <div class="section main-tab-panel" data-main-panel="vendidos">
+    <div class="section-header">Produtos vendidos</div>
+    <div id="vendidosResumo" class="kpi"></div>
+    <div class="helper">Os produtos marcados como vendidos saem da aba Produtos, mas continuam guardados aqui com o valor da venda e o lucro.</div>
+    <div id="vendidosContainer"></div>
   </div>
 
   <div class="section">
