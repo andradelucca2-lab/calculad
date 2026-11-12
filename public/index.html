@@ -13,7 +13,7 @@ h1{margin:0 0 5px;font-size:28px}.subtitle{color:#6b7280;margin-bottom:22px}
 .card,.section{background:#fff;border:1px solid #e5e7eb;border-radius:14px;box-shadow:0 2px 8px rgba(0,0,0,.04)}
 .card{padding:16px}.label{font-size:13px;color:#6b7280}.value{font-size:21px;font-weight:700;margin-top:5px}
 .section{margin-bottom:16px;overflow:hidden}.section-header{padding:16px 18px;border-bottom:1px solid #e5e7eb;font-weight:700}
-.form{padding:16px;display:grid;grid-template-columns:2fr 1fr 1fr 1fr auto;gap:10px}
+.form{padding:16px;display:grid;grid-template-columns:2fr 1fr 1fr 1fr 1fr auto;gap:10px}
 .form.small{grid-template-columns:1.7fr 1fr 1.2fr auto}
 input,select,button{width:100%;min-height:42px;border-radius:9px;border:1px solid #d1d5db;padding:9px 11px;font-size:14px;background:#fff}
 button{cursor:pointer;font-weight:700;border:0}.btn-primary{background:#111827;color:#fff}.btn-secondary{background:#eef0f3;color:#374151}
@@ -83,13 +83,21 @@ td input,td select{min-height:36px;padding:6px 8px}
     <div class="form">
       <input id="item" placeholder="Ex.: Controle PS3">
       <input id="preco" type="number" min="0" step="0.01" placeholder="Preço pago (R$)">
+      <select id="proxy">
+        <option value="">Proxy / Não informado</option>
+        <option value="Treasure">Treasure</option>
+        <option value="KuroGeek">KuroGeek</option>
+        <option value="Neko">Neko</option>
+        <option value="Buyee">Buyee</option>
+        <option value="Outro">Outro</option>
+      </select>
       <input id="peso" type="number" min="0" step="1" placeholder="Peso (g)">
       <select id="status">
         <option>Comprado</option><option>Na suíte</option><option>Consolidado</option><option>Recebido BR</option>
       </select>
       <button class="btn-primary" onclick="adicionarItem()">Adicionar</button>
     </div>
-    <div class="helper">O peso pode ficar em branco e ser preenchido depois. Digite o peso em gramas (ex.: 2000 = 2,00 kg). Cada produto pode ser vinculado a uma remessa na tabela.</div>
+    <div class="helper">O proxy indica onde o produto foi comprado e pode ser alterado depois. O peso pode ficar em branco e ser preenchido depois. Digite o peso em gramas (ex.: 2000 = 2,00 kg). Cada produto pode ser vinculado a uma remessa na tabela.</div>
     <div id="pesoAlert"></div>
     <div class="filter-row">
       <span class="filter-label">Mostrar:</span>
