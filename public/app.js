@@ -6,7 +6,7 @@ let appKey = sessionStorage.getItem('controle_app_key') || '';
 let abaPrincipal = sessionStorage.getItem('controle_aba_principal') || '1';
 let dados = { itens: [], fretes: [], impostos: [] };
 const timers = new Map();
-const abertos = { produtos: new Set(), fretes: new Set(), custos: new Set() };
+const abertos = { fretes: new Set(), impostos: new Set(), custos: new Set() };
 let gruposInicializados = false;
 let ultimaExclusao = null;
 
@@ -247,6 +247,12 @@ function prepararEstilos() {
       flex:1;
       min-width:150px
     }
+    .fold-preview {
+      margin-top:5px;
+      color:#6b7280;
+      font-size:12px;
+      line-height:1.35
+    }
     .fold-content {
       padding:0 14px 14px
     }
@@ -353,16 +359,6 @@ function prepararFiltros() {
 
   row.dataset.preparado = '1';
 
-  const toolbar = document.createElement('div');
-  toolbar.id = 'foldToolbar';
-  toolbar.className = 'fold-toolbar';
-  toolbar.innerHTML = `
-    <button type="button" class="btn-secondary"
-      onclick="recolherExpandirTodos(false)">Recolher todos</button>
-    <button type="button" class="btn-secondary"
-      onclick="recolherExpandirTodos(true)">Expandir todos</button>`;
-
-  row.insertAdjacentElement('afterend', toolbar);
 }
 
 function filtroAtivo(item) {
@@ -380,27 +376,20 @@ function filtroAtivo(item) {
 
 function iniciarGrupos() {
   if (gruposInicializados) return;
-  const maisRecente = dados.fretes[dados.fretes.length - 1];
-
-  if (maisRecente) {
-    ['produtos', 'fretes', 'custos'].forEach(area =>
-      abertos[area].add(String(maisRecente.id))
-    );
-  }
-
   gruposInicializados = true;
 }
 
 function alternarGrupo(area, id) {
   const conjunto = abertos[area];
-  const chave = String(id);
+  if (!conjunto) return;
 
+  const chave = String(id);
   if (conjunto.has(chave)) conjunto.delete(chave);
   else conjunto.add(chave);
 
-  if (area === 'produtos') renderItens();
-  else if (area === 'fretes') renderFretes();
-  else renderCustos();
+  if (area === 'fretes') renderFretes();
+  else if (area === 'impostos') renderImpostos();
+  else if (area === 'custos') renderCustos();
 }
 
 function botaoAbrir(area, id, aberto) {
@@ -412,15 +401,15 @@ function botaoAbrir(area, id, aberto) {
 }
 
 function recolherExpandirTodos(expandir) {
-  ['produtos', 'fretes', 'custos'].forEach(area => {
+  ['fretes', 'impostos', 'custos'].forEach(area => {
     abertos[area].clear();
     if (expandir) {
       dados.fretes.forEach(f => abertos[area].add(String(f.id)));
     }
   });
 
-  renderItens();
   renderFretes();
+  renderImpostos();
   renderCustos();
 }
 
@@ -505,7 +494,6 @@ function renderItens() {
   const alerta = document.getElementById('pesoAlert');
   if (!box) return;
 
-  iniciarGrupos();
   const fretes = listaRecente();
   const avisos = [];
 
@@ -532,115 +520,59 @@ function renderItens() {
     return;
   }
 
-  function tabela(grupo) {
-    if (!grupo.length) {
-      return '<div class="empty">Nenhum produto corresponde aos filtros.</div>';
-    }
+  const lista = dados.itens.filter(filtroAtivo);
 
-    let html = '<div class="table-wrap"><table><thead><tr>' +
-      '<th>Item</th><th>Preço</th><th>Peso (g)</th><th>Status</th>' +
-      '<th>Frete</th><th>Custo final</th><th>Ação</th>' +
-      '</tr></thead><tbody>';
-
-    grupo.forEach(item => {
-      const i = dados.itens.indexOf(item);
-
-      html += `<tr>
-        <td><input value="${esc(item.item)}"
-          aria-label="Nome do produto"
-          oninput="editarItem(${i},'item',this.value)"
-          onchange="renderItens()"></td>
-
-        <td><input type="number" min="0" step="0.01"
-          value="${item.preco || ''}"
-          aria-label="Preço em reais"
-          oninput="editarItem(${i},'preco',this.value)"></td>
-
-        <td><input type="number" min="0" step="1"
-          value="${item.peso ? Math.round(item.peso * 1000) : ''}"
-          aria-label="Peso em gramas"
-          oninput="editarItem(${i},'peso',this.value)"></td>
-
-        <td><select onchange="editarItem(${i},'status',this.value)">
-          ${['Comprado','Na suíte','Consolidado','Recebido BR']
-            .map(s => `<option ${item.status === s ? 'selected' : ''}>${s}</option>`)
-            .join('')}
-        </select></td>
-
-        <td><select onchange="atribuirFrete(${i},this.value)">
-          <option value="">Sem remessa</option>
-          ${fretes.map(f => `<option value="${esc(f.id)}"
-            ${String(item.freteId) === String(f.id) ? 'selected' : ''}>
-            ${esc(f.nome)}
-          </option>`).join('')}
-        </select></td>
-
-        <td class="cost-final">${moeda.format(custo(item))}</td>
-
-        <td><button type="button" class="btn-danger"
-          onclick="excluirItem(${i})">Excluir produto</button></td>
-      </tr>`;
-    });
-
-    return html + '</tbody></table></div>';
+  if (!lista.length) {
+    box.innerHTML = '<div class="empty">Nenhum produto corresponde à busca ou aos filtros.</div>';
+    return;
   }
 
-  let html = '';
-  let encontrados = 0;
+  let html = '<div class="table-wrap"><table><thead><tr>' +
+    '<th>Item</th><th>Preço</th><th>Peso (g)</th><th>Status</th>' +
+    '<th>Frete</th><th>Custo final</th><th>Ação</th>' +
+    '</tr></thead><tbody>';
 
-  fretes.forEach(frete => {
-    const todos = dados.itens.filter(
-      item => String(item.freteId) === String(frete.id)
-    );
-    const grupo = todos.filter(filtroAtivo);
+  lista.forEach(item => {
+    const i = dados.itens.indexOf(item);
 
-    if (filtroFoiUsado() && !grupo.length) return;
+    html += `<tr>
+      <td><input value="${esc(item.item)}"
+        aria-label="Nome do produto"
+        oninput="editarItem(${i},'item',this.value)"
+        onchange="renderItens()"></td>
 
-    encontrados += grupo.length;
-    const aberto = abertos.produtos.has(String(frete.id));
+      <td><input type="number" min="0" step="0.01"
+        value="${item.preco || ''}"
+        aria-label="Preço em reais"
+        oninput="editarItem(${i},'preco',this.value)"></td>
 
-    html += `<div class="remessa fold-card">
-      <div class="fold-head">
-        <div class="fold-head-main">
-          <div class="remessa-name">${esc(frete.nome)}</div>
-          <div class="muted">
-            ${todos.length} produto(s) ·
-            ${pesoTotal(todos).toFixed(2).replace('.', ',')} kg
-          </div>
-        </div>
-        <span class="pill">${moeda.format(frete.valor)}</span>
-        ${botaoAbrir('produtos', frete.id, aberto)}
-      </div>
-      <div class="fold-content" ${aberto ? '' : 'hidden'}>
-        ${tabela(grupo)}
-      </div>
-    </div>`;
+      <td><input type="number" min="0" step="1"
+        value="${item.peso ? Math.round(item.peso * 1000) : ''}"
+        aria-label="Peso em gramas"
+        oninput="editarItem(${i},'peso',this.value)"></td>
+
+      <td><select onchange="editarItem(${i},'status',this.value)">
+        ${['Comprado','Na suíte','Consolidado','Recebido BR']
+          .map(status => `<option ${item.status === status ? 'selected' : ''}>${status}</option>`)
+          .join('')}
+      </select></td>
+
+      <td><select onchange="atribuirFrete(${i},this.value)">
+        <option value="">Sem remessa</option>
+        ${fretes.map(f => `<option value="${esc(f.id)}"
+          ${String(item.freteId) === String(f.id) ? 'selected' : ''}>
+          ${esc(f.nome)}
+        </option>`).join('')}
+      </select></td>
+
+      <td class="cost-final">${moeda.format(custo(item))}</td>
+
+      <td><button type="button" class="btn-danger"
+        onclick="excluirItem(${i})">Excluir produto</button></td>
+    </tr>`;
   });
 
-  const semRemessa = dados.itens.filter(item => (
-    !item.freteId ||
-    !dados.fretes.some(f => String(f.id) === String(item.freteId))
-  ) && filtroAtivo(item));
-
-  encontrados += semRemessa.length;
-
-  if (semRemessa.length) {
-    html += `<div class="remessa fold-card">
-      <div class="fold-head">
-        <div class="fold-head-main">
-          <div class="remessa-name">Sem remessa</div>
-          <div class="muted">
-            ${semRemessa.length} produto(s) não vinculados a frete
-          </div>
-        </div>
-      </div>
-      <div class="fold-content">${tabela(semRemessa)}</div>
-    </div>`;
-  }
-
-  box.innerHTML = encontrados
-    ? html
-    : '<div class="empty">Nenhum produto corresponde à busca ou aos filtros.</div>';
+  box.innerHTML = html + '</tbody></table></div>';
 }
 
 function filtroFoiUsado() {
@@ -675,10 +607,10 @@ async function adicionarFrete() {
 
     dados.fretes.push(frete);
 
-    ['produtos', 'fretes', 'custos'].forEach(area => {
+    ['fretes', 'impostos', 'custos'].forEach(area => {
       abertos[area].clear();
-      abertos[area].add(String(frete.id));
     });
+    abertos.fretes.add(String(frete.id));
 
     document.getElementById('freteNome').value = '';
     document.getElementById('freteValor').value = '';
@@ -747,16 +679,22 @@ function renderFretes() {
     const peso = pesoTotal(grupo);
     const semPeso = grupo.filter(item => num(item.peso) <= 0).length;
     const impostos = dados.impostos.filter(t => String(t.freteId) === String(frete.id));
-    const nomes = grupo.map(item => item.item).join(', ') || 'Nenhum produto vinculado ainda';
+    const impostoTotal = impostos.reduce((soma, imposto) => soma + num(imposto.valor), 0);
+    const nomes = grupo.map(item => item.item);
+    const preview = nomes.length
+      ? nomes.slice(0, 3).map(esc).join(' · ') + (nomes.length > 3 ? ` · +${nomes.length - 3}` : '')
+      : 'Nenhum produto vinculado ainda';
     const aberto = abertos.fretes.has(String(frete.id));
 
     html += `<div class="remessa fold-card">
       <div class="fold-head">
         <div class="fold-head-main">
           <div class="remessa-name">${esc(frete.nome)}</div>
-          <div class="muted">${grupo.length} produto(s)</div>
+          <div class="muted">${grupo.length} produto(s) · ${peso.toFixed(2).replace('.', ',')} kg</div>
+          <div class="fold-preview">${preview}</div>
         </div>
-        <span class="pill">${moeda.format(frete.valor)}</span>
+        <span class="pill">Frete ${moeda.format(frete.valor)}</span>
+        ${impostoTotal > 0 ? `<span class="pill">Impostos ${moeda.format(impostoTotal)}</span>` : ''}
         ${botaoAbrir('fretes', frete.id, aberto)}
       </div>
 
@@ -771,7 +709,7 @@ function renderFretes() {
             </span>` : ''}
         </div>
 
-        <div class="remessa-items">${esc(nomes)}</div>
+        <div class="remessa-items">${esc(nomes.join(', ') || 'Nenhum produto vinculado ainda')}</div>
 
         <div class="frete-edit-grid">
           <input type="text" value="${esc(frete.nome)}"
@@ -840,6 +778,7 @@ function renderImpostos() {
   const box = document.getElementById('impostosContainer');
   if (!select || !box) return;
 
+  iniciarGrupos();
   const anterior = select.value;
 
   select.innerHTML = dados.fretes.length
@@ -859,27 +798,78 @@ function renderImpostos() {
 
   let html = '<div class="remessa-list">';
 
-  [...dados.impostos].reverse().forEach(imposto => {
-    const frete = dados.fretes.find(f => String(f.id) === String(imposto.freteId));
+  listaRecente().forEach(frete => {
+    const impostos = dados.impostos.filter(
+      imposto => String(imposto.freteId) === String(frete.id)
+    );
+    if (!impostos.length) return;
 
-    html += `<div class="remessa">
-      <div class="remessa-top">
-        <div>
-          <div class="remessa-name">${esc(frete ? frete.nome : 'Frete removido')}</div>
-          <div class="muted">Imposto vinculado a esta remessa</div>
+    const total = impostos.reduce((soma, imposto) => soma + num(imposto.valor), 0);
+    const grupo = dados.itens.filter(item => String(item.freteId) === String(frete.id));
+    const preview = impostos.slice(0, 3)
+      .map(imposto => `${moeda.format(imposto.valor)} · ${nomeRateio(imposto.rateio)}`)
+      .join(' | ');
+    const aberto = abertos.impostos.has(String(frete.id));
+
+    html += `<div class="remessa fold-card">
+      <div class="fold-head">
+        <div class="fold-head-main">
+          <div class="remessa-name">${esc(frete.nome)}</div>
+          <div class="muted">${impostos.length} imposto(s) · ${grupo.length} produto(s) na remessa</div>
+          <div class="fold-preview">${esc(preview)}</div>
         </div>
-        <button type="button" class="btn-danger"
-          onclick="excluirImposto('${String(imposto.id)}')">
-          Excluir imposto de ${moeda.format(imposto.valor)}
-        </button>
+        <span class="pill">${moeda.format(total)}</span>
+        ${botaoAbrir('impostos', frete.id, aberto)}
       </div>
 
-      <div class="remessa-meta">
-        <span class="pill">${moeda.format(imposto.valor)}</span>
-        <span class="pill">Rateio: ${nomeRateio(imposto.rateio)}</span>
+      <div class="fold-content" ${aberto ? '' : 'hidden'}>
+        ${[...impostos].reverse().map(imposto => `
+          <div class="remessa" style="margin:0 0 9px">
+            <div class="remessa-top">
+              <div>
+                <div class="remessa-name">${moeda.format(imposto.valor)}</div>
+                <div class="muted">Rateio: ${nomeRateio(imposto.rateio)}</div>
+              </div>
+              <button type="button" class="btn-danger"
+                onclick="excluirImposto('${String(imposto.id)}')">
+                Excluir imposto
+              </button>
+            </div>
+          </div>
+        `).join('')}
       </div>
     </div>`;
   });
+
+  const orfaos = dados.impostos.filter(imposto =>
+    !dados.fretes.some(frete => String(frete.id) === String(imposto.freteId))
+  );
+
+  if (orfaos.length) {
+    html += `<div class="remessa fold-card">
+      <div class="fold-head">
+        <div class="fold-head-main">
+          <div class="remessa-name">Frete removido</div>
+          <div class="muted">${orfaos.length} imposto(s) sem remessa</div>
+        </div>
+        <span class="pill">${moeda.format(orfaos.reduce((soma, imposto) => soma + num(imposto.valor), 0))}</span>
+      </div>
+      <div class="fold-content">
+        ${orfaos.map(imposto => `
+          <div class="remessa" style="margin:0 0 9px">
+            <div class="remessa-top">
+              <div>
+                <div class="remessa-name">${moeda.format(imposto.valor)}</div>
+                <div class="muted">Rateio: ${nomeRateio(imposto.rateio)}</div>
+              </div>
+              <button type="button" class="btn-danger"
+                onclick="excluirImposto('${String(imposto.id)}')">Excluir imposto</button>
+            </div>
+          </div>
+        `).join('')}
+      </div>
+    </div>`;
+  }
 
   box.innerHTML = html + '</div>';
 }
@@ -974,7 +964,7 @@ async function excluirFrete(id) {
       if (String(item.freteId) === String(id)) item.freteId = '';
     });
 
-    ['produtos', 'fretes', 'custos'].forEach(area =>
+    ['fretes', 'impostos', 'custos'].forEach(area =>
       abertos[area].delete(String(id))
     );
 
@@ -1063,7 +1053,7 @@ async function desfazerExclusao() {
 
       dados.fretes.push({ ...snapshot.frete });
 
-      ['produtos', 'fretes', 'custos'].forEach(area =>
+      ['fretes', 'impostos', 'custos'].forEach(area =>
         abertos[area].add(String(snapshot.frete.id))
       );
     }
@@ -1123,6 +1113,11 @@ function renderCustos() {
     if (!grupo.length) return;
 
     const soma = grupo.reduce((total, item) => total + custo(item), 0);
+    const freteRateado = grupo.reduce((total, item) => total + freteItem(item), 0);
+    const impostoRateado = grupo.reduce((total, item) => total + impostoItem(item), 0);
+    const nomes = grupo.map(item => item.item);
+    const preview = nomes.slice(0, 3).map(esc).join(' · ') +
+      (nomes.length > 3 ? ` · +${nomes.length - 3}` : '');
     const aberto = abertos.custos.has(String(frete.id));
 
     html += `<div class="remessa fold-card">
@@ -1130,8 +1125,11 @@ function renderCustos() {
         <div class="fold-head-main">
           <div class="remessa-name">${esc(frete.nome)}</div>
           <div class="muted">${grupo.length} produto(s) · custo total</div>
+          <div class="fold-preview">${preview}</div>
         </div>
         <span class="pill">${moeda.format(soma)}</span>
+        <span class="pill">Frete ${moeda.format(freteRateado)}</span>
+        ${impostoRateado > 0 ? `<span class="pill">Imposto ${moeda.format(impostoRateado)}</span>` : ''}
         ${botaoAbrir('custos', frete.id, aberto)}
       </div>
       <div class="fold-content" ${aberto ? '' : 'hidden'}>
@@ -1147,16 +1145,25 @@ function renderCustos() {
 
   if (sem.length) {
     const soma = sem.reduce((total, item) => total + custo(item), 0);
+    const chave = '__sem_remessa__';
+    const aberto = abertos.custos.has(chave);
+    const nomes = sem.map(item => item.item);
+    const preview = nomes.slice(0, 3).map(esc).join(' · ') +
+      (nomes.length > 3 ? ` · +${nomes.length - 3}` : '');
 
     html += `<div class="remessa fold-card">
       <div class="fold-head">
         <div class="fold-head-main">
           <div class="remessa-name">Sem remessa</div>
           <div class="muted">${sem.length} produto(s) · custo total</div>
+          <div class="fold-preview">${preview}</div>
         </div>
         <span class="pill">${moeda.format(soma)}</span>
+        ${botaoAbrir('custos', chave, aberto)}
       </div>
-      <div class="fold-content">${tabela(sem)}</div>
+      <div class="fold-content" ${aberto ? '' : 'hidden'}>
+        ${tabela(sem)}
+      </div>
     </div>`;
   }
 
@@ -1222,7 +1229,7 @@ async function importarBackup(event) {
 
     dados = backup;
     gruposInicializados = false;
-    ['produtos', 'fretes', 'custos'].forEach(area => abertos[area].clear());
+    ['fretes', 'impostos', 'custos'].forEach(area => abertos[area].clear());
 
     render();
     setStatus('Backup importado');
