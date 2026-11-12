@@ -37,7 +37,7 @@ async function lerJson(request: Request): Promise<any> {
 async function carregarDados(env: Env) {
   const [itens, fretes, impostos] = await Promise.all([
     env.DB.prepare(
-      "SELECT id,item,preco,peso_g,status,frete_id FROM itens ORDER BY rowid"
+      "SELECT id,item,preco,peso_g,status,frete_id,proxy FROM itens ORDER BY rowid"
     ).all(),
 
     env.DB.prepare(
@@ -57,6 +57,7 @@ async function carregarDados(env: Env) {
       peso: (Number(x.peso_g) || 0) / 1000,
       status: x.status || "Comprado",
       freteId: x.frete_id || "",
+      proxy: x.proxy || "",
     })),
 
     fretes: (fretes.results || []).map((x: any) => ({
@@ -113,15 +114,16 @@ async function api(request: Request, env: Env) {
 
     await env.DB.prepare(
       `INSERT INTO itens
-      (id,item,preco,peso_g,status,frete_id)
-      VALUES (?,?,?,?,?,?)`
+      (id,item,preco,peso_g,status,frete_id,proxy)
+      VALUES (?,?,?,?,?,?,?)`
     ).bind(
       String(x.id),
       String(x.item),
       Number(x.preco) || 0,
       Number(x.peso_g) || 0,
       String(x.status || "Comprado"),
-      x.freteId ? String(x.freteId) : null
+      x.freteId ? String(x.freteId) : null,
+      String(x.proxy || "")
     ).run();
 
     return json({ ok: true });
@@ -132,7 +134,7 @@ async function api(request: Request, env: Env) {
 
     await env.DB.prepare(
       `UPDATE itens
-      SET item=?,preco=?,peso_g=?,status=?,frete_id=?
+      SET item=?,preco=?,peso_g=?,status=?,frete_id=?,proxy=?
       WHERE id=?`
     ).bind(
       String(x.item || ""),
@@ -140,6 +142,7 @@ async function api(request: Request, env: Env) {
       Number(x.peso_g) || 0,
       String(x.status || "Comprado"),
       x.freteId ? String(x.freteId) : null,
+      String(x.proxy || ""),
       id
     ).run();
 
@@ -270,15 +273,16 @@ async function api(request: Request, env: Env) {
       ...x.itens.map((i: any) =>
         env.DB.prepare(
           `INSERT INTO itens
-          (id,item,preco,peso_g,status,frete_id)
-          VALUES (?,?,?,?,?,?)`
+          (id,item,preco,peso_g,status,frete_id,proxy)
+          VALUES (?,?,?,?,?,?,?)`
         ).bind(
           String(i.id),
           String(i.item || ""),
           Number(i.preco) || 0,
           Number(i.peso || 0) * 1000,
           String(i.status || "Comprado"),
-          i.freteId ? String(i.freteId) : null
+          i.freteId ? String(i.freteId) : null,
+          String(i.proxy || "")
         )
       ),
 
