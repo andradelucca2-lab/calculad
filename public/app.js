@@ -510,7 +510,7 @@ function renderItens() {
 
   fretes.forEach(frete => {
     const grupo = dados.itens.filter(
-      item => String(item.freteId) === String(frete.id)
+      item => !item.vendido && String(item.freteId) === String(frete.id)
     );
 
     if (frete.rateio === 'peso' && grupo.some(item => num(item.peso) <= 0)) {
@@ -526,12 +526,14 @@ function renderItens() {
       : '';
   }
 
-  if (!dados.itens.length) {
-    box.innerHTML = '<div class="empty">Nenhum produto cadastrado ainda.</div>';
+  const ativos = dados.itens.filter(item => !item.vendido);
+
+  if (!ativos.length) {
+    box.innerHTML = '<div class="empty">Nenhum produto no estoque. Os vendidos ficam na aba Vendidos.</div>';
     return;
   }
 
-  const lista = dados.itens.filter(item => !item.vendido && filtroAtivo(item));
+  const lista = ativos.filter(filtroAtivo);
 
   if (!lista.length) {
     box.innerHTML = '<div class="empty">Nenhum produto corresponde à busca ou aos filtros.</div>';
