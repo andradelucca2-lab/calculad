@@ -56,7 +56,8 @@ function normalize(source) {
       vendido: !!item.vendido,
       valorVenda: num(item.valorVenda),
       custoVenda: num(item.custoVenda),
-      vendidoEm: item.vendidoEm || ''
+      vendidoEm: item.vendidoEm || '',
+      plataformaVenda: item.plataformaVenda || ''
     })),
     fretes: (source.fretes || []).map(frete => ({
       id: String(frete.id || crypto.randomUUID()),
@@ -434,7 +435,8 @@ async function adicionarItem() {
     vendido: false,
     valorVenda: 0,
     custoVenda: 0,
-    vendidoEm: ''
+    vendidoEm: '',
+    plataformaVenda: ''
   };
 
   setStatus('Salvando…');
@@ -611,12 +613,46 @@ function valorDigitado(v) {
   return num(String(v ?? '').replace(',', '.'));
 }
 
+function perguntarPlataformaVenda() {
+  const resposta = prompt(
+    'Onde você vendeu?\n\n' +
+    '1 - OLX\n' +
+    '2 - Shopee\n' +
+    '3 - Mercado Livre\n' +
+    '4 - Enjoei\n' +
+    '5 - Outro\n\n' +
+    'Digite o número da opção:',
+    ''
+  );
+
+  if (resposta === null) return null;
+
+  const opcoes = {
+    '1': 'OLX',
+    '2': 'Shopee',
+    '3': 'Mercado Livre',
+    '4': 'Enjoei',
+    '5': 'Outro'
+  };
+
+  const plataforma = opcoes[String(resposta).trim()];
+  if (!plataforma) {
+    alert('Escolha uma opção de 1 a 5.');
+    return perguntarPlataformaVenda();
+  }
+
+  return plataforma;
+}
+
 async function marcarVendido(i) {
   const item = dados.itens[i];
   if (!item || item.vendido) return;
 
+  const plataforma = perguntarPlataformaVenda();
+  if (plataforma === null) return;
+
   const resposta = prompt(
-    'Por quanto você vendeu "' + item.item + '"?\n\nDigite o valor em reais:',
+    'Por quanto você vendeu "' + item.item + '" na ' + plataforma + '?\n\nDigite o valor em reais:',
     ''
   );
 
@@ -633,6 +669,7 @@ async function marcarVendido(i) {
   item.valorVenda = valor;
   item.custoVenda = custo(item);
   item.vendidoEm = new Date().toISOString();
+  item.plataformaVenda = plataforma;
 
   setStatus('Salvando venda…');
 
@@ -667,6 +704,20 @@ function editarValorVenda(i, valor) {
   renderVendidos();
 }
 
+function editarPlataformaVenda(i, valor) {
+  const item = dados.itens[i];
+  if (!item || !item.vendido) return;
+
+  item.plataformaVenda = valor;
+
+  schedule('item-' + item.id, () =>
+    apiFetch('/items/' + encodeURIComponent(item.id), {
+      method: 'PUT',
+      body: JSON.stringify(remoteItem(item))
+    })
+  );
+}
+
 async function voltarAoEstoque(i) {
   const item = dados.itens[i];
   if (!item || !item.vendido) return;
@@ -678,6 +729,7 @@ async function voltarAoEstoque(i) {
   item.valorVenda = 0;
   item.custoVenda = 0;
   item.vendidoEm = '';
+  item.plataformaVenda = '';
 
   setStatus('Voltando ao estoque…');
 
@@ -728,7 +780,7 @@ function renderVendidos() {
   }
 
   let html = '<div class="table-wrap"><table><thead><tr>' +
-    '<th>Item</th><th>Proxy</th><th>Custo final</th><th>Vendido por</th>' +
+    '<th>Item</th><th>Proxy</th><th>Custo final</th><th>Onde vendeu</th><th>Valor vendido</th>' +
     '<th>Lucro</th><th>Data</th><th>Ação</th>' +
     '</tr></thead><tbody>';
 
@@ -741,6 +793,13 @@ function renderVendidos() {
       '<td><strong>' + esc(item.item) + '</strong></td>' +
       '<td>' + esc(item.proxy || 'Não informado') + '</td>' +
       '<td>' + moeda.format(custoHistorico) + '</td>' +
+      '<td><select aria-label="Onde vendeu" onchange="editarPlataformaVenda(' + i + ',this.value)">' +
+        [['','Não informado'],['OLX','OLX'],['Shopee','Shopee'],['Mercado Livre','Mercado Livre'],['Enjoei','Enjoei'],['Outro','Outro']]
+          .map(function(opcao) {
+            return '<option value="' + opcao[0] + '"' +
+              (item.plataformaVenda === opcao[0] ? ' selected' : '') + '>' + opcao[1] + '</option>';
+          }).join('') +
+      '</select></td>' +
       '<td><input type="number" min="0" step="0.01" value="' + (num(item.valorVenda) || '') +
         '" aria-label="Valor da venda" onchange="editarValorVenda(' + i + ',this.value)"></td>' +
       '<td style="font-weight:700;color:' + (lucroVenda >= 0 ? '#166534' : '#991b1b') + '">' +
