@@ -261,7 +261,15 @@ async function aplicarWinterPackage2021() {
   if (!item) return false;
 
   const nomeFrete = 'KuroGeek Winter Package 7460 JPY';
-  let frete = dados.fretes.find(f => String(f.nome || '') === nomeFrete);
+  let frete = dados.fretes.find(f => {
+    const nome = nomeComparavel(f.nome);
+    return String(f.nome || '') === nomeFrete ||
+      (nome.includes('winter') && nome.includes('package'));
+  });
+
+  if (frete && String(frete.nome || '') !== nomeFrete) {
+    frete.nome = nomeFrete;
+  }
 
   if (!frete) {
     frete = {
@@ -276,7 +284,12 @@ async function aplicarWinterPackage2021() {
       body: JSON.stringify(frete)
     });
     dados.fretes.push(frete);
-  } else if (Math.abs(num(frete.valor) - 251.40) > 0.001 || frete.rateio !== 'peso') {
+  } else if (
+    Math.abs(num(frete.valor) - 251.40) > 0.001 ||
+    frete.rateio !== 'peso' ||
+    String(frete.nome || '') !== nomeFrete
+  ) {
+    frete.nome = nomeFrete;
     frete.valor = 251.40;
     frete.rateio = 'peso';
 
