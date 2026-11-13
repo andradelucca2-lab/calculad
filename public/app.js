@@ -249,6 +249,84 @@ async function aplicarRemessaKuroGeek7460() {
   return true;
 }
 
+
+async function aplicarWinterPackage2021() {
+  const item = dados.itens.find(produto => {
+    if (produto.vendido) return false;
+    const nome = nomeComparavel(produto.item);
+    return nome.includes('bts') && nome.includes('2021') &&
+      nome.includes('winter') && nome.includes('package');
+  });
+
+  if (!item) return false;
+
+  const nomeFrete = 'KuroGeek Winter Package 7460 JPY';
+  let frete = dados.fretes.find(f => String(f.nome || '') === nomeFrete);
+
+  if (!frete) {
+    frete = {
+      id: crypto.randomUUID(),
+      nome: nomeFrete,
+      valor: 251.40,
+      rateio: 'peso'
+    };
+
+    await apiFetch('/fretes', {
+      method: 'POST',
+      body: JSON.stringify(frete)
+    });
+    dados.fretes.push(frete);
+  } else if (Math.abs(num(frete.valor) - 251.40) > 0.001 || frete.rateio !== 'peso') {
+    frete.valor = 251.40;
+    frete.rateio = 'peso';
+
+    await apiFetch('/fretes/' + encodeURIComponent(frete.id), {
+      method: 'PUT',
+      body: JSON.stringify(frete)
+    });
+  }
+
+  const mudou =
+    Math.abs(num(item.preco) - 96.90) > 0.001 ||
+    Math.abs(num(item.peso) - 1.548) > 0.0001 ||
+    String(item.freteId || '') !== String(frete.id) ||
+    item.proxy !== 'KuroGeek';
+
+  if (mudou) {
+    item.preco = 96.90;
+    item.peso = 1.548;
+    item.freteId = String(frete.id);
+    item.proxy = 'KuroGeek';
+
+    await apiFetch('/items/' + encodeURIComponent(item.id), {
+      method: 'PUT',
+      body: JSON.stringify(remoteItem(item))
+    });
+  }
+
+  const impostoExistente = dados.impostos.find(imposto =>
+    String(imposto.freteId) === String(frete.id) &&
+    Math.abs(num(imposto.valor) - 25.72) < 0.001
+  );
+
+  if (!impostoExistente) {
+    const imposto = {
+      id: crypto.randomUUID(),
+      freteId: String(frete.id),
+      valor: 25.72,
+      rateio: 'peso'
+    };
+
+    await apiFetch('/impostos', {
+      method: 'POST',
+      body: JSON.stringify(imposto)
+    });
+    dados.impostos.push(imposto);
+  }
+
+  return true;
+}
+
 async function entrar() {
   const campo = document.getElementById('appPassword');
   const senha = campo ? campo.value : '';
@@ -280,7 +358,8 @@ async function entrar() {
 
     const remessaAtualizada = await aplicarRemessaKuroGeek7760();
     const remessa7460Atualizada = await aplicarRemessaKuroGeek7460();
-    if (remessaAtualizada || remessa7460Atualizada) {
+    const winterAtualizado = await aplicarWinterPackage2021();
+    if (remessaAtualizada || remessa7460Atualizada || winterAtualizado) {
       setStatus('Remessas KuroGeek atualizadas');
     }
 
