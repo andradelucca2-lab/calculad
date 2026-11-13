@@ -74,6 +74,114 @@ function normalize(source) {
   };
 }
 
+
+function nomeComparavel(valor) {
+  return String(valor || '')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, ' ')
+    .trim();
+}
+
+async function aplicarRemessaKuroGeek7760() {
+  const specs = [
+    {
+      peso: 0.766,
+      encontra: nome => nome.includes('map of the soul on e') && nome.includes('dvd')
+    },
+    {
+      peso: 0.115,
+      encontra: nome => nome.includes('etude') && nome.includes('bt21') && nome.includes('eye')
+    },
+    {
+      peso: 0.189,
+      encontra: nome => nome.includes('vt cosmetics') && nome.includes('bt21') && nome.includes('lip')
+    },
+    {
+      peso: 0.212,
+      encontra: nome => nome.includes('jung kook') && nome.includes('i am still') && !nome.includes('card')
+    },
+    {
+      peso: 0.212,
+      encontra: nome => nome.includes('jung kook') && nome.includes('i am still') && nome.includes('card')
+    }
+  ];
+
+  const encontrados = specs.map(spec => ({
+    spec,
+    item: dados.itens.find(item => !item.vendido && spec.encontra(nomeComparavel(item.item)))
+  }));
+
+  if (encontrados.some(x => !x.item)) return false;
+
+  const nomeFrete = 'KuroGeek 7760 JPY';
+  let frete = dados.fretes.find(f => String(f.nome || '') === nomeFrete);
+
+  if (!frete) {
+    frete = {
+      id: crypto.randomUUID(),
+      nome: nomeFrete,
+      valor: 257.40,
+      rateio: 'peso'
+    };
+
+    await apiFetch('/fretes', {
+      method: 'POST',
+      body: JSON.stringify(frete)
+    });
+    dados.fretes.push(frete);
+  } else if (Math.abs(num(frete.valor) - 257.40) > 0.001 || frete.rateio !== 'peso') {
+    frete.valor = 257.40;
+    frete.rateio = 'peso';
+
+    await apiFetch('/fretes/' + encodeURIComponent(frete.id), {
+      method: 'PUT',
+      body: JSON.stringify(frete)
+    });
+  }
+
+  for (const { spec, item } of encontrados) {
+    const mudou =
+      Math.abs(num(item.peso) - spec.peso) > 0.0001 ||
+      String(item.freteId || '') !== String(frete.id) ||
+      item.proxy !== 'KuroGeek';
+
+    if (!mudou) continue;
+
+    item.peso = spec.peso;
+    item.freteId = String(frete.id);
+    item.proxy = 'KuroGeek';
+
+    await apiFetch('/items/' + encodeURIComponent(item.id), {
+      method: 'PUT',
+      body: JSON.stringify(remoteItem(item))
+    });
+  }
+
+  const impostoExistente = dados.impostos.find(imposto =>
+    String(imposto.freteId) === String(frete.id) &&
+    Math.abs(num(imposto.valor) - 35.57) < 0.001
+  );
+
+  if (!impostoExistente) {
+    const imposto = {
+      id: crypto.randomUUID(),
+      freteId: String(frete.id),
+      valor: 35.57,
+      rateio: 'peso'
+    };
+
+    await apiFetch('/impostos', {
+      method: 'POST',
+      body: JSON.stringify(imposto)
+    });
+    dados.impostos.push(imposto);
+  }
+
+  return true;
+}
+
 async function entrar() {
   const campo = document.getElementById('appPassword');
   const senha = campo ? campo.value : '';
@@ -102,6 +210,9 @@ async function entrar() {
     } else {
       setStatus('Sincronizado');
     }
+
+    const remessaAtualizada = await aplicarRemessaKuroGeek7760();
+    if (remessaAtualizada) setStatus('Remessa KuroGeek atualizada');
 
     render();
   } catch {
