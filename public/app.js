@@ -216,8 +216,8 @@ function prepararEstilos() {
   style.textContent = `
     #itensContainer table th:first-child,
     #itensContainer table td:first-child {
-      min-width:190px;
-      width:190px
+      min-width:240px;
+      width:240px
     }
     .filter-row {
       display:flex!important;
