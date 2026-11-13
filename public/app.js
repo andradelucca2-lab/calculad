@@ -182,6 +182,73 @@ async function aplicarRemessaKuroGeek7760() {
   return true;
 }
 
+
+async function aplicarRemessaKuroGeek7460() {
+  const specs = [
+    {
+      peso: 0.967,
+      encontra: nome => nome.includes('blackpink') && nome.includes('photobook')
+    },
+    {
+      peso: 0.660,
+      encontra: nome => nome.includes('bts') && nome.includes('memories of 2016')
+    }
+  ];
+
+  const encontrados = specs.map(spec => ({
+    spec,
+    item: dados.itens.find(item => !item.vendido && spec.encontra(nomeComparavel(item.item)))
+  }));
+
+  if (encontrados.some(x => !x.item)) return false;
+
+  const nomeFrete = 'KuroGeek 7460 JPY';
+  let frete = dados.fretes.find(f => String(f.nome || '') === nomeFrete);
+
+  if (!frete) {
+    frete = {
+      id: crypto.randomUUID(),
+      nome: nomeFrete,
+      valor: 247.48,
+      rateio: 'peso'
+    };
+
+    await apiFetch('/fretes', {
+      method: 'POST',
+      body: JSON.stringify(frete)
+    });
+    dados.fretes.push(frete);
+  } else if (Math.abs(num(frete.valor) - 247.48) > 0.001 || frete.rateio !== 'peso') {
+    frete.valor = 247.48;
+    frete.rateio = 'peso';
+
+    await apiFetch('/fretes/' + encodeURIComponent(frete.id), {
+      method: 'PUT',
+      body: JSON.stringify(frete)
+    });
+  }
+
+  for (const { spec, item } of encontrados) {
+    const mudou =
+      Math.abs(num(item.peso) - spec.peso) > 0.0001 ||
+      String(item.freteId || '') !== String(frete.id) ||
+      item.proxy !== 'KuroGeek';
+
+    if (!mudou) continue;
+
+    item.peso = spec.peso;
+    item.freteId = String(frete.id);
+    item.proxy = 'KuroGeek';
+
+    await apiFetch('/items/' + encodeURIComponent(item.id), {
+      method: 'PUT',
+      body: JSON.stringify(remoteItem(item))
+    });
+  }
+
+  return true;
+}
+
 async function entrar() {
   const campo = document.getElementById('appPassword');
   const senha = campo ? campo.value : '';
@@ -212,7 +279,10 @@ async function entrar() {
     }
 
     const remessaAtualizada = await aplicarRemessaKuroGeek7760();
-    if (remessaAtualizada) setStatus('Remessa KuroGeek atualizada');
+    const remessa7460Atualizada = await aplicarRemessaKuroGeek7460();
+    if (remessaAtualizada || remessa7460Atualizada) {
+      setStatus('Remessas KuroGeek atualizadas');
+    }
 
     render();
   } catch {
