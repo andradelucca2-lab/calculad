@@ -214,6 +214,11 @@ function prepararEstilos() {
   const style = document.createElement('style');
   style.id = 'melhoriasAppStyles';
   style.textContent = `
+    #itensContainer table th:first-child,
+    #itensContainer table td:first-child {
+      min-width:190px;
+      width:190px
+    }
     .filter-row {
       display:flex!important;
       flex-wrap:wrap;
